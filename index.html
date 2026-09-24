@@ -307,17 +307,21 @@ tr.clickable:hover td{background:rgba(255,255,255,.025)}
 .chart text{font-family:var(--mono);font-size:9px;fill:var(--dim)}
 
 /* ---------- Fallblattanzeige ---------- */
-.board{background:var(--screen);border:1px solid var(--screen-edge);border-radius:12px;padding:4px 8px 2px;box-shadow:inset 0 6px 22px rgba(0,0,0,.55);overflow-x:auto}
-.board table{font-family:var(--mono)}
-.board th{color:var(--cyan);font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:400;border-bottom:1px solid #1c2633;padding:9px 6px 7px}
-.board td{border-bottom:1px solid #111821;padding:8px 6px}
-.board tr:last-child td{border-bottom:0}
-.board tr.clickable:hover td{background:rgba(63,208,224,.04)}
-.board .pname{font-family:var(--mono);text-transform:uppercase;letter-spacing:.03em;color:var(--white);font-weight:700;font-size:13.5px;max-width:230px}
-.board .pmeta{font-family:var(--font);margin-top:2px;white-space:nowrap}
-@media (max-width:599px){.board .pmeta .gp{display:none}}
-.board .wr{background:transparent;border:1px solid #243041;color:var(--muted)}
-.board .wr.good{border-color:rgba(47,208,142,.35);color:var(--green);background:transparent}
+.board{--cw:18px;--ch:27px;--fs:15px;--gg:12px;background:#030507;border:1px solid var(--screen-edge);border-radius:12px;padding:10px 8px 8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),inset 0 8px 26px rgba(0,0,0,.7);overflow:hidden}
+@media (max-width:599px){.board{margin:0 -8px;padding:8px 6px 6px}}
+.brow{display:grid;grid-template-columns:var(--cols);column-gap:var(--gg);align-items:center;width:100%;padding:3px 2px;border:0;background:none;color:inherit;text-align:left;border-radius:5px;font:inherit}
+.brow+.brow{margin-top:3px}
+button.brow:hover{background:rgba(63,208,224,.06)}
+button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+.bhead{padding:0 2px 7px;margin-bottom:6px;border-bottom:1px solid #18212c}
+.bhead span{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan);white-space:nowrap;overflow:hidden}
+.bc{display:flex;min-width:0}
+.bc .flap{flex:none}
+.board .flap b{width:var(--cw);height:var(--ch);font-size:var(--fs)}
+.lamp{font-style:normal;font-size:9px;line-height:1;width:10px;text-align:center}
+.lamp.up{color:var(--green)} .lamp.down{color:var(--red)} .lamp.new{color:var(--cyan)}
+.flap.pos b{color:#7fe3b5} .flap.neg b{color:#ff9aa3}
+.board .empty{color:var(--muted)}
 .flap{display:inline-flex;gap:2px;vertical-align:middle}
 .flap b{position:relative;display:inline-grid;place-items:center;width:17px;height:25px;border-radius:3px;background:linear-gradient(180deg,#252d38 0,#1c232d 50%,#151b23 50%,#10151b 100%);color:var(--white);font-family:var(--mono);font-weight:700;font-size:15px;line-height:1;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 1px 0 rgba(0,0,0,.7)}
 .flap b::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.8)}
@@ -662,13 +666,9 @@ body[data-mode="1v1"] .only2v2{display:none!important}
         </div>
       </div>
       <div id="sotm"></div>
-      <div class="board">
-        <table>
-          <thead><tr>
-            <th class="ctr">Pl.</th><th>Spieler</th><th class="num">Wertung</th><th class="ctr col-hide-sm">S / N</th><th class="ctr">Quote</th><th class="num col-hide-sm">Tordiff.</th>
-          </tr></thead>
-          <tbody id="lbBody"></tbody>
-        </table>
+      <div class="board" id="board">
+        <div class="brow bhead" id="boardHead" aria-hidden="true"></div>
+        <div id="lbBody" role="list" aria-label="Rangliste"></div>
       </div>
     </div>
   </section>
@@ -1625,38 +1625,91 @@ function formDots(form) {
   return `<span class="form" aria-label="Form">${form.slice(-5).map(w => `<i class="${w ? 'w' : 'l'}"></i>`).join('')}</span>`;
 }
 
-/* Fallblatt: Zeichen, die sich seit der letzten Anzeige geändert haben, blättern kurz durch */
+/* Fallblatt: Zeichen, die sich seit der letzten Anzeige geändert haben, klappen
+   wie bei einer echten Anzeigetafel ein paar Zeichen der Trommel durch. */
 const reduceMotion = !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const flapMem = new Map();
-function flap(key, text, cls = '') {
+const DRUM = ' ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ0123456789+-.%';
+function flap(key, text, cls = '', row = 0) {
   const prev = flapMem.get(key);
   flapMem.set(key, text);
   const cells = [...text].map((c, i) => {
     const anim = !reduceMotion && (prev === undefined || prev[i] !== c) && c !== ' ';
     return `<b ${anim ? `data-f="${i}"` : ''}>${c === ' ' ? '' : esc(c)}</b>`;
   }).join('');
-  return `<span class="flap ${cls}" role="img" aria-label="${esc(text.trim())}">${cells}</span>`;
+  return `<span class="flap ${cls}" data-r="${row}" aria-hidden="true">${cells}</span>`;
 }
 function runFlaps(root) {
   if (reduceMotion) return;
-  const cells = [...root.querySelectorAll('.flap b[data-f]')];
-  const digits = '0123456789', letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const drop = b => b.animate && b.animate([{ transform: 'scaleY(.25)', filter: 'brightness(.6)' }, { transform: 'scaleY(1)', filter: 'none' }], { duration: 80, easing: 'ease-out' });
-  cells.forEach((b, n) => {
+  const drop = b => b.animate && b.animate([{ transform: 'scaleY(.2)', filter: 'brightness(.55)' }, { transform: 'scaleY(1)', filter: 'none' }], { duration: 70, easing: 'ease-out' });
+  $$('.flap b[data-f]', root).forEach(b => {
     const final = b.textContent;
-    const set = /\d/.test(final) ? digits : letters;
-    const steps = 2 + Number(b.dataset.f) + (n % 3);
+    const i = Number(b.dataset.f);
+    const row = Math.min(Number(b.parentElement.dataset.r) || 0, 20);
     b.removeAttribute('data-f');
+    let pos = DRUM.indexOf(final.toUpperCase());
+    if (pos < 0) pos = DRUM.length - 1;
+    const steps = 3 + (i % 3) + Math.floor(Math.random() * 2);
+    const seq = [];
+    for (let k = steps; k > 0; k--) seq.push(DRUM[(pos - k + DRUM.length * 2) % DRUM.length]);
+    seq.push(final);
     let k = 0;
+    b.textContent = seq[0].trim();
     const tick = () => {
       if (!b.isConnected) return;
-      k++;
-      b.textContent = k >= steps ? final : set[Math.floor(Math.random() * set.length)];
+      b.textContent = seq[k].trim();
       drop(b);
-      if (k < steps) setTimeout(tick, 60);
+      if (++k < seq.length) setTimeout(tick, 55);
     };
-    setTimeout(tick, Math.min(n, 40) * 14);
+    setTimeout(tick, row * 45 + i * 12);
   });
+}
+
+/* Namen für die Tafel: passt nicht, wird "VORNAME N." oder abgeschnitten */
+function boardName(name, n) {
+  const up = name.toUpperCase().replace(/\s+/g, ' ').trim();
+  if (up.length <= n) return up.padEnd(n, ' ');
+  const parts = up.split(' ');
+  if (parts.length > 1) {
+    const short = `${parts[0]} ${parts[parts.length - 1][0]}.`;
+    if (short.length <= n) return short.padEnd(n, ' ');
+  }
+  return up.slice(0, n);
+}
+
+/* Spalten je nach Breite: Namen bekommen Vorrang, Zusatzspalten kommen dazu, wenn Platz ist */
+function boardLayout() {
+  const board = $('#board');
+  const style = getComputedStyle(board);
+  const W = board.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 4;
+  const small = W < 560;
+  const cw = W < 330 ? 13 : small ? 14 : 18, gap = 2, gg = small ? 7 : 12;
+  const gw = n => n * (cw + gap) - gap;
+  const cols = [
+    { k: 'rank', n: 2, label: 'Pl.' },
+    { k: 'lamp', px: 10, label: '' },
+    { k: 'name', n: 0, label: 'Spieler' },
+    { k: 'rt', n: 4, label: 'Wertung' }
+  ];
+  const extra = [
+    { k: 'quote', n: 3, label: 'Quote %' },
+    { k: 'w', n: 3, label: 'Siege' },
+    { k: 'l', n: 3, label: 'Nied.' },
+    { k: 'gd', n: 4, label: 'Tordiff.' }
+  ];
+  const nameCells = () => {
+    const used = cols.reduce((s, c) => s + (c.k === 'name' ? 0 : c.px || gw(c.n)), 0) + (cols.length - 1) * gg;
+    return Math.floor((W - used + gap) / (cw + gap));
+  };
+  for (const e of extra) { cols.push(e); if (nameCells() < 13) { cols.pop(); break; } }
+  cols.find(c => c.k === 'name').n = Math.max(6, Math.min(28, nameCells()));
+  const tmpl = cols.map(c => c.k === 'name' ? 'minmax(0,1fr)' : `${c.px || gw(c.n)}px`).join(' ');
+  board.style.setProperty('--cols', tmpl);
+  board.style.setProperty('--cw', cw + 'px');
+  board.style.setProperty('--ch', (small ? Math.round(cw * 1.55) : 27) + 'px');
+  board.style.setProperty('--fs', (small ? cw - 1 : 15) + 'px');
+  board.style.setProperty('--gg', gg + 'px');
+  return cols;
 }
 
 function renderSotm() {
@@ -1697,6 +1750,8 @@ function renderLeaderboard() {
   const q = S.lbQuery.trim().toLowerCase();
 
   const body = $('#lbBody');
+  const cols = boardLayout();
+  $('#boardHead').innerHTML = cols.map(c => `<span>${esc(c.label)}</span>`).join('');
   const shown = rows.map((x, i) => ({ ...x, rank: i + 1 })).filter(x => !q || x.p.name.toLowerCase().includes(q));
   if (!shown.length) {
     const msg = activePlayers().length === 0
@@ -1704,29 +1759,37 @@ function renderLeaderboard() {
       : q ? 'Kein Spieler passt zur Suche.'
         : S.lbFilter === 'active' ? `Noch niemand mit mindestens ${CFG.minGames} Spielen in diesem Zeitraum.<br><button class="btn sm" data-action="lbfilter" data-v="all">Alle anzeigen</button>`
           : 'Keine Spieler in diesem Zeitraum.';
-    body.innerHTML = `<tr><td colspan="6"><div class="empty">${msg}</div></td></tr>`;
+    body.innerHTML = `<div class="empty">${msg}</div>`;
     return;
   }
   const scope = S.lbPeriod + '|' + S.lbFilter;
-  body.innerHTML = shown.map(({ p, r, rank }) => {
+  const num = (v, n) => String(Math.min(v, 10 ** n - 1)).padStart(n, ' ');
+  body.innerHTML = shown.map(({ p, r, rank }, idx) => {
     const rating = disp(r);
     const rate = r.games ? r.wins / r.games : 0;
     const gd = r.gf - r.ga;
-    let mv = '';
+    let lamp = '', lampTitle = '';
     if (r.last >= sod && r.games > 0) {
       const pr = prevRank.get(p.id);
-      if (pr == null) mv = `<span class="mv up" title="Heute neu in der Liste">neu</span>`;
-      else if (pr !== rank) mv = `<span class="mv ${pr > rank ? 'up' : 'down'}" title="Veränderung seit heute früh">${pr > rank ? '▲' : '▼'}${Math.abs(pr - rank)}</span>`;
+      if (pr == null) { lamp = '<i class="lamp new">●</i>'; lampTitle = ', heute neu'; }
+      else if (pr !== rank) { lamp = `<i class="lamp ${pr > rank ? 'up' : 'down'}">${pr > rank ? '▲' : '▼'}</i>`; lampTitle = `, ${pr > rank ? 'aufgestiegen' : 'abgestiegen'} um ${Math.abs(pr - rank)} seit heute früh`; }
     }
-    return `<tr class="clickable" data-action="profile" data-pid="${esc(p.id)}">
-      <td class="ctr">${flap(`${scope}|${p.id}|rank`, String(rank).padStart(2, ' '), 'sm')}</td>
-      <td><div class="pname">${esc(p.name)}</div>
-        <div class="pmeta">${r.games ? `${formDots(r.form)}<span class="gp">${r.games} ${r.games === 1 ? 'Spiel' : 'Spiele'}</span>` : '<span>noch kein Spiel</span>'}</div></td>
-      <td class="num">${flap(`${scope}|${p.id}|rt`, String(rating).padStart(4, ' '), rank === 1 ? 'hl' : '')}${mv}</td>
-      <td class="ctr nowrap col-hide-sm"><span style="color:var(--green)">${r.wins}</span> / <span style="color:var(--red)">${r.losses}</span></td>
-      <td class="ctr"><span class="wr ${rate >= 0.5 && r.games ? 'good' : ''}">${r.games ? pct(rate) : '–'}</span></td>
-      <td class="num col-hide-sm" style="color:${gd >= 0 ? 'var(--green)' : 'var(--red)'}">${r.games ? signed(gd) : '–'}</td>
-    </tr>`;
+    const key = k => `${scope}|${p.id}|${k}`;
+    const cell = c => {
+      switch (c.k) {
+        case 'rank': return flap(key('rank'), num(rank, 2), '', idx);
+        case 'lamp': return lamp;
+        case 'name': return flap(key('name' + c.n), boardName(p.name, c.n), '', idx);
+        case 'rt': return flap(key('rt'), num(rating, 4), rank === 1 ? 'hl' : '', idx);
+        case 'quote': return flap(key('q'), r.games ? num(Math.round(rate * 100), 3) : '  -', '', idx);
+        case 'w': return flap(key('w'), num(r.wins, 3), '', idx);
+        case 'l': return flap(key('l'), num(r.losses, 3), '', idx);
+        case 'gd': return flap(key('gd'), r.games ? ((gd > 0 ? '+' : gd < 0 ? '-' : ' ') + Math.min(Math.abs(gd), 999)).padStart(4, ' ') : '   -', gd > 0 ? 'pos' : gd < 0 ? 'neg' : '', idx);
+      }
+      return '';
+    };
+    const label = `Platz ${rank}, ${p.name}, ${rating} Punkte${r.games ? `, ${r.wins} Siege, ${r.losses} Niederlagen, Quote ${pct(rate)}` : ', noch kein Spiel'}${lampTitle}`;
+    return `<button class="brow" role="listitem" data-action="profile" data-pid="${esc(p.id)}" aria-label="${esc(label)}" title="${esc(p.name)}">${cols.map(c => `<span class="bc">${cell(c)}</span>`).join('')}</button>`;
   }).join('');
   runFlaps(body);
 }
@@ -2491,6 +2554,11 @@ document.addEventListener('change', e => {
 $('#lbSearch').addEventListener('input', e => { S.lbQuery = e.target.value; renderLeaderboard(); });
 $('#formAddPlayer').addEventListener('submit', e => { e.preventDefault(); if (saveNewPlayers($('#newPlayerName').value)) closeDialog('dlgAddPlayer'); });
 $('#formAdmin').addEventListener('submit', e => { e.preventDefault(); tryAdminLogin(); });
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { if (S.tab === 'leaderboard' && S.loaded.players && S.loaded.matches) renderLeaderboard(); }, 200);
+});
 window.addEventListener('online', renderStatus);
 window.addEventListener('offline', renderStatus);
 window.addEventListener('hashchange', () => {
