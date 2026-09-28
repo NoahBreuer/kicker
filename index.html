@@ -168,10 +168,10 @@ select.dup{border-color:var(--red);box-shadow:0 0 0 3px var(--red-dim)}
 .pos-tip svg.i{flex:none}
 .pos-tip{font-size:13px;color:#cfe9ff;background:rgba(0,0,0,.22);border:1px dashed rgba(63,208,224,.4);border-radius:10px;padding:8px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .hl-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.hl{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--cyan-dim);color:#bff3fa;border:1px solid rgba(63,208,224,.3)}
-.hl.gold{background:rgba(255,182,39,.12);color:#ffd98a;border-color:rgba(255,182,39,.35)}
-.hl.hot{background:rgba(47,208,142,.12);color:#9ff0cb;border-color:rgba(47,208,142,.35)}
-.hl.pink{background:var(--magenta-dim);color:#f5b8f8;border-color:rgba(224,99,232,.35)}
+.chiphl{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--cyan-dim);color:#bff3fa;border:1px solid rgba(63,208,224,.3)}
+.chiphl.gold{background:rgba(255,182,39,.12);color:#ffd98a;border-color:rgba(255,182,39,.35)}
+.chiphl.hot{background:rgba(47,208,142,.12);color:#9ff0cb;border-color:rgba(47,208,142,.35)}
+.chiphl.pink{background:var(--magenta-dim);color:#f5b8f8;border-color:rgba(224,99,232,.35)}
 .badges{display:flex;flex-wrap:wrap;gap:6px}
 .bdg{cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:5px 10px;border-radius:9px;border:1px solid rgba(63,208,224,.4);background:var(--cyan-dim);color:var(--text);font-weight:600}
 .bdg.off{border-color:var(--line);background:transparent;color:var(--dim);font-weight:500}
@@ -339,6 +339,8 @@ button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 .lamp.up{color:var(--green)} .lamp.down{color:var(--red)} .lamp.new{color:var(--cyan)}
 .flap.prov b{color:var(--muted)}
 .bdiv{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);padding:10px 2px 6px;margin-top:6px;border-top:1px solid #18212c}
+.flap b.fs{color:#7fe3b5}
+.flap b.fn{color:#ff9aa3}
 .flap.pos b{color:#7fe3b5} .flap.neg b{color:#ff9aa3}
 .board .empty{color:var(--muted)}
 .flap{display:inline-flex;gap:2px;vertical-align:middle}
@@ -567,7 +569,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
   <section class="view" id="view-match" role="tabpanel">
     <div class="banner warn" id="setupBanner" hidden>
       <svg class="i"><use href="#i-info"/></svg>
-      <div class="grow"><strong>Noch keine Spieler angelegt.</strong><p>Lege mindestens zwei Spieler an, dann kann das erste Spiel gewertet werden.</p></div>
+      <div class="grow"><strong>Noch keine Spieler angelegt.</strong><p>Mindestens zwei anlegen, dann kann es losgehen.</p></div>
       <button class="btn sm amber" data-action="addPlayer">Spieler anlegen</button>
     </div>
 
@@ -652,7 +654,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
       </div>
 
       <div class="actions">
-        <button class="btn only2v2" data-action="balance" title="Teilt die vier gewählten Spieler so auf, dass es möglichst 50:50 steht"><svg class="i"><use href="#i-scale"/></svg>Teams ausgleichen</button>
+        <button class="btn only2v2" data-action="balance" title="Möglichst 50:50 aufteilen"><svg class="i"><use href="#i-scale"/></svg>Teams ausgleichen</button>
         <button class="btn" data-action="swapSides"><svg class="i"><use href="#i-swap"/></svg>Seiten tauschen</button>
         <button class="btn primary big" id="btnSubmit" data-action="submit"><svg class="i"><use href="#i-check"/></svg>Spiel werten</button>
       </div>
@@ -667,7 +669,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
       <div class="card-head">
         <div>
           <h2>Rangliste</h2>
-          <p class="sub" id="lbSub">Sortiert nach vorsichtiger Wertung. Antippen für Details.</p>
+          <p class="sub" id="lbSub"></p>
         </div>
         <button class="btn sm" data-action="addPlayer"><svg class="i"><use href="#i-userplus"/></svg>Spieler</button>
       </div>
@@ -702,7 +704,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
     </div>
     <div class="records" id="records"></div>
     <div class="card" id="posCard">
-      <div class="card-head"><div><h3>Sturm oder Abwehr?</h3><p class="sub">Siege über oder unter der Erwartung vor dem Spiel, getrennt nach Position. So zählt nicht, ob jemand zufällig oft starke Partner hatte. Tendenz ab je 6 Doppeln pro Position.</p></div></div>
+      <div class="card-head"><div><h3>Sturm oder Abwehr?</h3><p class="sub">Siege über oder unter der Erwartung, je Position.</p></div></div>
       <div id="posTop"></div>
       <div class="tbl-wrap"><table>
         <thead><tr><th>Spieler</th><th class="ctr">Sturm</th><th class="ctr">Abwehr</th><th>Tendenz</th></tr></thead>
@@ -710,11 +712,11 @@ body[data-mode="1v1"] .only2v2{display:none!important}
       </table></div>
     </div>
     <div class="card" id="fameCard">
-      <div class="card-head"><div><h3>Ehrentafel</h3><p class="sub">Wer einen Monat oder eine Saison gewinnt, bleibt hier verewigt. Wertung nur aus den Spielen des Zeitraums, mindestens 5 Spiele.</p></div></div>
+      <div class="card-head"><div><h3>Ehrentafel</h3><p class="sub">Monats- und Saisonsieger.</p></div></div>
       <div id="fame"></div>
     </div>
     <div class="card" id="compareCard">
-      <div class="card-head"><div><h3>Direktvergleich</h3><p class="sub">Zwei Spieler nebeneinander: Duelle, gemeinsame Doppel, Prognose.</p></div></div>
+      <div class="card-head"><div><h3>Direktvergleich</h3><p class="sub">Zwei Spieler nebeneinander.</p></div></div>
       <div class="cmp-pick">
         <select id="cmpA" aria-label="Erster Spieler"></select>
         <span class="cmp-vs">gegen</span>
@@ -723,9 +725,9 @@ body[data-mode="1v1"] .only2v2{display:none!important}
       <div id="cmpOut"></div>
     </div>
     <div class="card">
-      <div class="card-head"><div><h3>Beste Doppel</h3><p class="sub">Duos mit mindestens 3 gemeinsamen Spielen.</p></div></div>
+      <div class="card-head"><div><h3>Beste Doppel</h3><p class="sub">Ab 3 gemeinsamen Doppeln.</p></div></div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>Duo</th><th class="ctr">Spiele</th><th class="ctr">Siege</th><th class="num">Quote</th></tr></thead>
+        <thead><tr><th>Duo</th><th class="num">Siegquote</th></tr></thead>
         <tbody id="duosBody"></tbody>
       </table></div>
     </div>
@@ -735,7 +737,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
   <section class="view" id="view-history" role="tabpanel" hidden>
     <div class="card">
       <div class="card-head">
-        <div><h2>Verlauf</h2><p class="sub">Alle Spiele mit Wertungsänderung. Falsch eingetragene Spiele lassen sich annullieren.</p></div>
+        <div><h2>Verlauf</h2><p class="sub">Alle Spiele mit Wertungsänderung.</p></div>
       </div>
       <div class="controls">
         <select id="histPlayer" style="flex:1;min-width:170px" aria-label="Nach Spieler filtern"></select>
@@ -756,7 +758,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
       <div class="card-head">
         <div>
           <h2>DYP-Turnier</h2>
-          <p class="sub">Draw Your Partner: Anwesende markieren, jede Runde werden Partner und Gegner neu gelost. Wer pausieren muss, wird fair durchrotiert.</p>
+          <p class="sub">Draw Your Partner: Anwesende markieren, jede Runde neue Partner und Gegner.</p>
         </div>
       </div>
       <div class="banner info" id="dypSession" hidden style="margin-bottom:12px"></div>
@@ -767,7 +769,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
       <div class="plist" id="dypPlayers"></div>
       <div class="row wrap-ok" style="margin-top:14px;justify-content:space-between">
         <div class="seg" role="group" aria-label="Auslosung">
-          <button data-action="dypMode" data-v="fair" title="Berücksichtigt die Wertung, damit die Spiele knapp werden">Ausgeglichen</button>
+          <button data-action="dypMode" data-v="fair" title="Möglichst knappe Spiele">Ausgeglichen</button>
           <button data-action="dypMode" data-v="random">Reiner Zufall</button>
         </div>
         <div class="row">
@@ -807,7 +809,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
       <label class="field"><span class="field-label">Name(n)</span>
         <input class="input" id="newPlayerName" maxlength="400" placeholder="z. B. Jana, Tobias, Mehmet" autocomplete="off" enterkeyhint="done">
       </label>
-      <p class="sub" style="margin:0">Mehrere Namen mit Komma trennen, um gleich die ganze Crew anzulegen. Doppelte Namen werden übersprungen.</p>
+      <p class="sub" style="margin:0">Mehrere Namen mit Komma trennen.</p>
       <div class="err-text" id="addPlayerErr"></div>
     </div>
     <div class="dlg-foot"><button type="button" class="btn" data-close>Abbrechen</button><button type="submit" class="btn primary">Anlegen</button></div>
@@ -818,7 +820,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
   <form class="dlg" method="dialog" id="formAdmin">
     <div class="dlg-head"><h3>Admin-Modus</h3><button type="button" class="x-btn" data-close aria-label="Schließen"><svg class="i"><use href="#i-x"/></svg></button></div>
     <div class="dlg-body">
-      <p class="sub" style="margin:0">Schaltet Annullieren fremder Spiele und Archivieren von Spielern frei.</p>
+      
       <input type="text" name="username" autocomplete="username" value="ifl-kicker-admin" hidden>
       <label class="field"><span class="field-label">Passwort</span>
         <input class="input" id="adminPw" type="password" autocomplete="current-password" enterkeyhint="go">
@@ -845,7 +847,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
   <div class="dlg">
     <div class="dlg-head"><h3>QR-Code für den Kickertisch</h3><button class="x-btn" data-close aria-label="Schließen"><svg class="i"><use href="#i-x"/></svg></button></div>
     <div class="dlg-body" style="text-align:center">
-      <p class="sub" style="margin:0">Ausdrucken und an den Tisch kleben: Scannen öffnet direkt die Ergebniseingabe.</p>
+      <p class="sub" style="margin:0">Ausdrucken und an den Tisch kleben.</p>
       <div><div class="qrbox" id="qrBox"></div></div>
       <div class="mono xs muted" id="qrUrl" style="word-break:break-all"></div>
     </div>
@@ -907,7 +909,8 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const icon = (id, extra = '') => `<svg class="i" ${extra}><use href="#i-${id}"/></svg>`;
-const pct = p => `${Math.min(99, Math.max(1, Math.round(p * 100)))}\u202f%`; // nie 0 oder 100: gewinnen kann jeder
+const pct = p => `${Math.round(p * 100)}\u202f%`;
+const pctP = p => `${Math.min(99, Math.max(1, Math.round(p * 100)))}\u202f%`; // Prognosen: nie 0 oder 100, gewinnen kann jeder
 const signed = n => (n > 0 ? '+' : n < 0 ? '−' : '±') + Math.abs(n);
 const DAY = 864e5;
 const startOfDay = (t = Date.now()) => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
@@ -995,7 +998,7 @@ function fresh() {
   return {
     mu: MU0, sigma: SIGMA0, games: 0, wins: 0, losses: 0, gf: 0, ga: 0, cs: 0,
     streak: 0, best: 0, first: 0, last: 0, hist: [], form: [],
-    fw: 0, fl: 0, dw: 0, dl: 0, fe: 0, de: 0, giant: 0, lastVs: {}, opp: {}, par: {}
+    fw: 0, fl: 0, dw: 0, dl: 0, fe: 0, de: 0, giant: 0, dog: 0, closeW: 0, closeN: 0, lastVs: {}, opp: {}, par: {}
   };
 }
 
@@ -1061,6 +1064,9 @@ function replay(matches) {
       r.form.push(won ? 1 : 0); if (r.form.length > 10) r.form.shift();
       const exp = isBlue ? pBlue : 1 - pBlue; // Siegerwartung vor dem Spiel
       if (won && exp <= 0.25) r.giant++;
+      if (won && exp <= 0.4) r.dog++;
+      const diff = Math.abs(gf - ga);
+      if (diff === 1 || (diff === 2 && Math.min(gf, ga) >= 5)) { r.closeN++; if (won) r.closeW++; } // knapp oder Verlängerung
       const pos = isBlue ? m.posB : m.posG;
       if (m.mode === '2v2' && pos) {
         if (pos.forward === id) { won ? r.fw++ : r.fl++; r.fe += exp; }
@@ -1091,8 +1097,6 @@ function replay(matches) {
     // Revanche: das letzte direkte Einzel gegeneinander verloren, und das ist höchstens 3 Tage her
     const lastDuel = prevVs[Wids[0]][Lids[0]];
     if (m.mode === '1v1' && lastDuel && !lastDuel.won && m.ts - lastDuel.ts < 3 * DAY) events.push({ k: 'revenge' });
-    const miles = ids.filter(id => [50, 100, 250, 500, 1000].includes(R.get(id).games));
-    if (miles.length) events.push({ k: 'milestone', n: R.get(miles[0]).games, ids: miles });
     per.set(m.id, { pBlue, deltas, before, events });
   }
   return { R, per };
@@ -1138,8 +1142,8 @@ function badges(r, titles) {
     { k: 'wall', name: 'Die Wand', desc: '5 Spiele zu null gewonnen', got: r.cs >= 5 },
     { k: 'giant', name: 'Riesentöter', desc: 'Mit höchstens 25 % Siegchance gewonnen', got: r.giant >= 1 },
     { k: 'allround', name: 'Allrounder', desc: 'Je 10 Doppel im Sturm und in der Abwehr, beide mit positiver Bilanz', got: allround },
-    { k: 'regular', name: 'Stammgast', desc: '50 Spiele', got: r.games >= 50 },
-    { k: 'legend', name: 'Urgestein', desc: '250 Spiele', got: r.games >= 250 },
+    { k: 'nerve', name: 'Nervenstark', desc: '5 knappe Spiele gewonnen (ein Tor Unterschied oder Verlängerung)', got: r.closeW >= 5 },
+    { k: 'dog', name: 'Favoritenschreck', desc: '5 Siege als Außenseiter (höchstens 40 % Siegchance)', got: r.dog >= 5 },
     { k: 'month', name: 'Monatssieger', desc: 'Einmal Spieler des Monats', got: !!(titles && titles.months) }
   ];
 }
@@ -1739,7 +1743,7 @@ function renderPreview() {
   }
   const p = winProb(blue.map(ratingOf), green.map(ratingOf));
   setBar(p);
-  $('#probText').textContent = `${pct(p)} : ${pct(1 - p)}`;
+  $('#probText').textContent = `${pctP(p)} : ${pctP(1 - p)}`;
   renderPosTips();
   const d = Math.abs(p - 0.5), fav = p > 0.5 ? 'Blau' : 'Grün';
   $('#probHint').textContent = (d < 0.06 ? 'OFFENES DUELL' : d < 0.18 ? `LEICHTER VORTEIL ${fav}` : `FAVORIT ${fav}`).toUpperCase();
@@ -1777,13 +1781,13 @@ async function submitMatch() {
 
   const T = S.target;
   if (!plausibleScore(sb, sg, T)) {
-    const okOdd = await ask({ title: 'Ergebnis prüfen', msg: `${sb} : ${sg} passt nicht zu „bis ${T} Tore“. Trotzdem so werten? (Die Siegtore lassen sich in den Einstellungen ändern.)`, ok: 'So werten' });
+    const okOdd = await ask({ title: 'Ergebnis prüfen', msg: `${sb} : ${sg} passt nicht zu „bis ${T}“. Trotzdem werten?`, ok: 'Werten' });
     if (!okOdd) return;
   }
 
   const recent = D().valid.find(m => Date.now() - m.ts < 5 * 60e3 && sameLineup(m, blue, green, sb, sg));
   if (recent) {
-    const okAgain = await ask({ title: 'Schon eingetragen?', msg: `Genau dieses Ergebnis wurde ${ago(recent.ts)} bereits gewertet. Wirklich ein zweites Mal werten?`, ok: 'Zweites Spiel werten' });
+    const okAgain = await ask({ title: 'Schon eingetragen?', msg: `Dieses Ergebnis wurde ${ago(recent.ts)} bereits gewertet. Nochmal werten?`, ok: 'Nochmal werten' });
     if (!okAgain) return;
   }
 
@@ -1818,7 +1822,7 @@ function balanceTeams() {
   S.sel = { b1: best.x[0], b2: best.x[1], g1: best.y[0], g2: best.y[1] };
   store.set('sel', S.sel);
   renderSelects(); renderPreview();
-  toast(same ? `Die Teams sind schon bestmöglich verteilt (${pct(best.p)} : ${pct(1 - best.p)}).` : `Neu aufgeteilt: ${pct(best.p)} : ${pct(1 - best.p)}.`, 'info');
+  toast(same ? `Die Teams sind schon bestmöglich verteilt (${pctP(best.p)} : ${pctP(1 - best.p)}).` : `Neu aufgeteilt: ${pctP(best.p)} : ${pctP(1 - best.p)}.`, 'info');
 }
 
 /* Highlights eines Spiels als kleine Plaketten */
@@ -1827,7 +1831,7 @@ function eventTags(events = [], extra = []) {
   const T = [...extra];
   events.forEach(e => {
     if (e.k === 'zunull') T.push(['gold', 'Zu null! Ab unter den Tisch']);
-    else if (e.k === 'upset') T.push(['pink', `Überraschung: nur ${pct(e.p)} Siegchance`]);
+    else if (e.k === 'upset') T.push(['pink', `Überraschung: nur ${pctP(e.p)} Siegchance`]);
     else if (e.k === 'streak') T.push(['hot', `${names(e.ids)}: ${e.n} Siege in Folge`]);
     else if (e.k === 'breaker') T.push(['', `Serie von ${names(e.ids)} gerissen (${e.n})`]);
     else if (e.k === 'first') T.push(['hot', `Erster Sieg für ${names(e.ids)}`]);
@@ -1836,7 +1840,7 @@ function eventTags(events = [], extra = []) {
   });
   return T;
 }
-const tagHtml = T => T.length ? `<div class="hl-row">${T.map(([c, t]) => `<span class="hl ${c}">${esc(t)}</span>`).join('')}</div>` : '';
+const tagHtml = T => T.length ? `<div class="hl-row">${T.map(([c, t]) => `<span class="chiphl ${c}">${esc(t)}</span>`).join('')}</div>` : '';
 
 /* Wechsel an der Spitze durch dieses Spiel? (nur fürs zuletzt gewertete Spiel) */
 function leaderChange(m) {
@@ -1894,13 +1898,13 @@ function formDots(form) {
    wie bei einer echten Anzeigetafel ein paar Zeichen der Trommel durch. */
 const reduceMotion = !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const flapMem = new Map();
-const DRUM = ' ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ0123456789+-.%';
-function flap(key, text, cls = '', row = 0) {
+const DRUM = ' ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ0123456789+-.,%';
+function flap(key, text, cls = '', row = 0, cellCls = null) {
   const prev = flapMem.get(key);
   flapMem.set(key, text);
   const cells = [...text].map((c, i) => {
     const anim = !reduceMotion && (prev === undefined || prev[i] !== c) && c !== ' ';
-    return `<b ${anim ? `data-f="${i}"` : ''}>${c === ' ' ? '' : esc(c)}</b>`;
+    return `<b ${anim ? `data-f="${i}"` : ''} ${cellCls && cellCls[i] ? `class="${cellCls[i]}"` : ''}>${c === ' ' ? '' : esc(c)}</b>`;
   }).join('');
   return `<span class="flap ${cls}" data-r="${row}" aria-hidden="true">${cells}</span>`;
 }
@@ -1958,9 +1962,8 @@ function boardLayout() {
   ];
   const extra = [
     { k: 'quote', n: 3, label: 'Quote %' },
-    { k: 'w', n: 3, label: 'Siege' },
-    { k: 'l', n: 3, label: 'Nied.' },
-    { k: 'gd', n: 4, label: 'Tordiff.' }
+    { k: 'form', n: 5, label: 'Form' },
+    { k: 'gd', n: 4, label: 'Ø Diff.' }
   ];
   const nameCells = () => {
     const used = cols.reduce((s, c) => s + (c.k === 'name' ? 0 : c.px || gw(c.n)), 0) + (cols.length - 1) * gg;
@@ -2001,9 +2004,9 @@ function renderLeaderboard() {
   $$('#segPeriod button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.lbPeriod)));
   $$('#segFilter button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.lbFilter)));
   const subs = {
-    all: `Alle Spiele seit Start. „Aktiv“: letztes Spiel vor höchstens 90 Tagen. Einen Platz gibt es nach ${CFG.placement} Spielen Einstufung.`,
-    season: `Nur Spiele ab dem 1. Januar ${year}. Alle starten neu mit Einstufung.`,
-    '30d': 'Nur die letzten 30 Tage. Zeigt, wer gerade in Form ist.'
+    all: `Aktiv: gespielt in den letzten 90 Tagen. Platz ab ${CFG.placement} Spielen.`,
+    season: `Nur Spiele seit 1. Januar ${year}.`,
+    '30d': 'Nur die letzten 30 Tage.'
   };
   $('#lbSub').textContent = subs[S.lbPeriod];
   renderSotm();
@@ -2057,13 +2060,19 @@ function renderLeaderboard() {
         case 'name': return flap(key('name' + c.n), boardName(p.name, c.n), '', idx);
         case 'rt': return flap(key('rt'), num(rating, 4), rank === 1 ? 'hl' : rank == null ? 'prov' : '', idx);
         case 'quote': return flap(key('q'), r.games ? num(Math.round(rate * 100), 3) : '  -', '', idx);
-        case 'w': return flap(key('w'), num(r.wins, 3), '', idx);
-        case 'l': return flap(key('l'), num(r.losses, 3), '', idx);
-        case 'gd': return flap(key('gd'), r.games ? ((gd > 0 ? '+' : gd < 0 ? '-' : ' ') + Math.min(Math.abs(gd), 999)).padStart(4, ' ') : '   -', gd > 0 ? 'pos' : gd < 0 ? 'neg' : '', idx);
+        case 'form': {
+          const f = r.form.slice(-5).map(w => (w ? 'S' : 'N')).join('').padEnd(5, ' ');
+          return flap(key('form'), f, '', idx, [...f].map(ch => ch === 'S' ? 'fs' : ch === 'N' ? 'fn' : ''));
+        }
+        case 'gd': {
+          const avg = r.games ? gd / r.games : 0;
+          const txt = r.games ? ((avg > 0.05 ? '+' : avg < -0.05 ? '-' : ' ') + Math.min(Math.abs(avg), 9.9).toFixed(1).replace('.', ',')).padStart(4, ' ') : '   -';
+          return flap(key('gd'), txt, avg > 0.05 ? 'pos' : avg < -0.05 ? 'neg' : '', idx);
+        }
       }
       return '';
     };
-    const label = `${rank == null ? `In Einstufung, ${r.games} von ${CFG.placement} Spielen` : `Platz ${rank}`}, ${p.name}, ${rating} Punkte${r.games ? `, ${r.wins} Siege, ${r.losses} Niederlagen, Quote ${pct(rate)}` : ', noch kein Spiel'}${lampTitle}`;
+    const label = `${rank == null ? 'In Einstufung' : `Platz ${rank}`}, ${p.name}, ${rating} Punkte${r.games ? `, Siegquote ${pct(rate)}` : ', noch kein Spiel'}${lampTitle}`;
     return `${pre}<button class="brow ${rank == null ? 'prov' : ''}" role="listitem" data-action="profile" data-pid="${esc(p.id)}" aria-label="${esc(label)}" title="${esc(p.name)}">${cols.map(c => `<span class="bc">${cell(c)}</span>`).join('')}</button>`;
   }).join('');
   runFlaps(body);
@@ -2124,8 +2133,8 @@ function renderInsights() {
   const scorers = pl.filter(x => x.r.games >= MINA);
   const gk = top(scorers, x => x.r.gf / x.r.games);
   const df = top(scorers, x => -x.r.ga / x.r.games);
-  const iron = top(pl, x => x.r.games);
-  const cs = top(pl, x => x.r.cs);
+  const nerve = top(pl.filter(x => x.r.closeN >= 5), x => x.r.closeW / x.r.closeN + x.r.closeN / 1e4);
+  const cs = top(pl.filter(x => x.r.wins >= 5), x => x.r.cs / x.r.wins);
 
   const since = Date.now() - 30 * DAY;
   const gain = {};
@@ -2151,10 +2160,10 @@ function renderInsights() {
     recCard({ ic: 'trend', color: 'var(--green)', title: 'Aufsteiger (30 Tage)', value: climber && climber[1] > 0 ? nameOf(climber[0]) : '', meta: climber && climber[1] > 0 ? `${signed(climber[1])} Wertungspunkte` : 'Noch niemand im Plus', pid: climber && climber[1] > 0 ? climber[0] : null }),
     recCard({ ic: 'bolt', color: 'var(--cyan)', title: 'Tormaschine', value: gk ? gk.p.name : '', meta: gk ? `${(gk.r.gf / gk.r.games).toFixed(1).replace('.', ',')} Tore pro Spiel` : `Ab ${MINA} Spielen`, pid: gk?.p.id }),
     recCard({ ic: 'shield', color: 'var(--green)', title: 'Abwehrbollwerk', value: df ? df.p.name : '', meta: df ? `nur ${(df.r.ga / df.r.games).toFixed(1).replace('.', ',')} Gegentore pro Spiel` : `Ab ${MINA} Spielen`, pid: df?.p.id }),
-    recCard({ ic: 'users', color: 'var(--cyan)', title: 'Meiste Spiele', value: iron ? iron.p.name : '', meta: iron ? `${iron.r.games} Spiele` : 'Noch keine Spiele', pid: iron?.p.id }),
-    recCard({ ic: 'target', color: 'var(--green)', title: 'Zu-Null-Siege', value: cs && cs.r.cs > 0 ? cs.p.name : '', meta: cs && cs.r.cs > 0 ? `${cs.r.cs}× ohne Gegentor gewonnen` : 'Noch kein Zu-Null', pid: cs && cs.r.cs > 0 ? cs.p.id : null }),
-    recCard({ ic: 'spark', color: 'var(--magenta)', title: 'Größte Überraschung', value: upset && upset.pw < 0.45 ? (upset.m.winner === 'blue' ? upset.m.blueIds : upset.m.greenIds).map(nameOf).join(' & ') : '', meta: upset && upset.pw < 0.45 ? `Sieg mit nur ${pct(upset.pw)} Chance, ${fmtDate(upset.m.ts)}` : 'Bisher gewinnen die Favoriten' }),
-    recCard({ ic: 'sword', color: 'var(--cyan)', title: 'Häufigstes Duell', value: riv && riv.n >= 3 ? `${nameOf(riv.x)} gegen ${nameOf(riv.y)}` : '', meta: riv && riv.n >= 3 ? `${riv.n} Duelle, Bilanz ${riv.wx} : ${riv.n - riv.wx}` : 'Ab 3 Duellen' })
+    recCard({ ic: 'shield', color: 'var(--cyan)', title: 'Nervenstark', value: nerve ? nerve.p.name : '', meta: nerve ? `gewinnt ${pct(nerve.r.closeW / nerve.r.closeN)} der knappen Spiele` : 'Ab 5 knappen Spielen', pid: nerve?.p.id }),
+    recCard({ ic: 'target', color: 'var(--green)', title: 'Zu-Null-König', value: cs && cs.r.cs > 0 ? cs.p.name : '', meta: cs && cs.r.cs > 0 ? `${pct(cs.r.cs / cs.r.wins)} der Siege ohne Gegentor` : 'Noch kein Zu-Null-Sieg', pid: cs && cs.r.cs > 0 ? cs.p.id : null }),
+    recCard({ ic: 'spark', color: 'var(--magenta)', title: 'Größte Überraschung', value: upset && upset.pw < 0.45 ? (upset.m.winner === 'blue' ? upset.m.blueIds : upset.m.greenIds).map(nameOf).join(' & ') : '', meta: upset && upset.pw < 0.45 ? `Sieg mit nur ${pctP(upset.pw)} Chance, ${fmtDate(upset.m.ts)}` : 'Bisher gewinnen die Favoriten' }),
+    recCard({ ic: 'sword', color: 'var(--cyan)', title: 'Größte Rivalität', value: riv && riv.n >= 3 ? `${nameOf(riv.x)} gegen ${nameOf(riv.y)}` : '', meta: riv && riv.n >= 3 ? (riv.wx * 2 === riv.n ? 'Völlig ausgeglichen' : `${nameOf(riv.wx * 2 > riv.n ? riv.x : riv.y)} gewinnt ${pct(Math.max(riv.wx, riv.n - riv.wx) / riv.n)}`) : 'Ab 3 Duellen' })
   ];
   $('#records').innerHTML = cards.join('');
   renderPositions();
@@ -2172,9 +2181,8 @@ function renderInsights() {
   const duos = Object.values(duo).filter(x => x.n >= 3).sort((a, b) => (b.w / b.n - a.w / a.n) || b.n - a.n).slice(0, 8);
   $('#duosBody').innerHTML = duos.length ? duos.map((x, i) => `<tr>
       <td style="font-weight:600">${i === 0 ? `<span style="color:var(--magenta)">${icon('trophy')}</span> ` : ''}${x.ids.map(id => esc(nameOf(id))).join(' & ')}</td>
-      <td class="ctr mono">${x.n}</td><td class="ctr mono" style="color:var(--green)">${x.w}</td>
       <td class="num"><strong>${pct(x.w / x.n)}</strong></td></tr>`).join('')
-    : `<tr><td colspan="4"><div class="empty">Noch kein Duo mit drei gemeinsamen Doppeln.</div></td></tr>`;
+    : `<tr><td colspan="2"><div class="empty">Noch kein Duo mit drei gemeinsamen Doppeln.</div></td></tr>`;
 }
 
 /* ---------------- Positionen ---------------- */
@@ -2182,7 +2190,7 @@ function renderPositions() {
   const R = D().full.R;
   const rows = activePlayers().map(p => ({ p, r: R.get(p.id) })).filter(x => x.r && x.r.fw + x.r.fl + x.r.dw + x.r.dl >= 6)
     .map(x => ({ ...x, v: posVerdict(x.r) })).sort((a, b) => collator.compare(a.p.name, b.p.name));
-  const fmt = (n, raw) => n ? `<span class="mono">${n} Sp.</span><br><span class="mono" style="color:${raw >= 0 ? 'var(--green)' : 'var(--red)'}">${raw >= 0 ? '+' : '−'}${Math.round(Math.abs(raw) * 100)} %</span>` : '<span class="dim">–</span>';
+  const fmt = (n, raw) => n >= 3 ? `<span class="mono" style="color:${raw >= 0 ? 'var(--green)' : 'var(--red)'}">${raw >= 0 ? '+' : '−'}${Math.round(Math.abs(raw) * 100)} %</span>` : '<span class="dim">–</span>';
   $('#posBody').innerHTML = rows.length ? rows.map(({ p, v }) => `<tr class="clickable" data-action="profile" data-pid="${esc(p.id)}">
       <td style="font-weight:600">${esc(p.name)}</td>
       <td class="ctr">${fmt(v.fn, v.fRaw)}</td><td class="ctr">${fmt(v.dn, v.dRaw)}</td>
@@ -2191,8 +2199,8 @@ function renderPositions() {
   const best = key => rows.filter(x => (key === 'f' ? x.v.fn : x.v.dn) >= 8).sort((a, b) => (key === 'f' ? b.v.f - a.v.f : b.v.d - a.v.d))[0];
   const bf = best('f'), bd = best('d');
   $('#posTop').innerHTML = bf || bd ? `<div class="hl-row" style="margin:0 0 12px">
-      ${bf && bf.v.fRaw > 0 ? `<span class="hl hot">Bester Sturm: ${esc(bf.p.name)} (+${Math.round(bf.v.fRaw * 100)} %)</span>` : ''}
-      ${bd && bd.v.dRaw > 0 ? `<span class="hl hot">Beste Abwehr: ${esc(bd.p.name)} (+${Math.round(bd.v.dRaw * 100)} %)</span>` : ''}</div>` : '';
+      ${bf && bf.v.fRaw > 0 ? `<span class="chiphl hot">Bester Sturm: ${esc(bf.p.name)} (+${Math.round(bf.v.fRaw * 100)} %)</span>` : ''}
+      ${bd && bd.v.dRaw > 0 ? `<span class="chiphl hot">Beste Abwehr: ${esc(bd.p.name)} (+${Math.round(bd.v.dRaw * 100)} %)</span>` : ''}</div>` : '';
 }
 
 /* ---------------- Ehrentafel ---------------- */
@@ -2201,8 +2209,8 @@ function renderFame() {
   const item = x => {
     const c = x.champ;
     const inner = `<span class="per">${esc(x.label)}${x.live ? '<br>läuft' : ''}</span>
-      <span class="who">${c ? esc(nameOf(c.id)) : '<span class="muted" style="font-weight:400">niemand mit 5 Spielen</span>'}</span>
-      <span class="val">${c ? `${c.rating}, ${c.games} Sp.` : ''}</span>`;
+      <span class="who">${c ? esc(nameOf(c.id)) : '<span class="muted" style="font-weight:400">noch kein Titel</span>'}</span>
+      <span class="val">${c ? `${c.rating}` : ''}</span>`;
     return c ? `<button class="fame-it ${x.live ? 'live' : 'champ'}" data-action="profile" data-pid="${esc(c.id)}">${inner}</button>`
       : `<div class="fame-it ${x.live ? 'live' : ''}" style="cursor:default">${inner}</div>`;
   };
@@ -2272,19 +2280,18 @@ function renderCompare() {
       <div class="row wrap-ok" style="justify-content:space-between;font-size:12px;gap:6px 14px">
         <span><span class="dlbl">Tore </span>${goalsA} : ${goalsB}</span>
         <span><span class="dlbl">Einzel </span>${sw} : ${single.length - sw}</span>
-        <span><span class="dlbl">Prognose Einzel </span><span style="color:var(--magenta)">${pct(p)} : ${pct(1 - p)}</span></span>
+        <span><span class="dlbl">Prognose Einzel </span><span style="color:var(--magenta)">${pctP(p)} : ${pctP(1 - p)}</span></span>
       </div>
     </div>
     <div class="cmp-grid">
       ${row('Wertung', disp(rA), disp(rB))}
-      ${row('Spiele', rA.games, rB.games)}
       ${row('Siegquote', per(rA, 'wins'), per(rB, 'wins'), pct)}
       ${row('Tore pro Spiel', per(rA, 'gf'), per(rB, 'gf'), dec)}
       ${row('Gegentore pro Spiel', per(rA, 'ga'), per(rB, 'ga'), dec, false)}
       ${row('Beste Serie', rA.best, rB.best)}
       ${row('Zu-Null-Siege', rA.cs, rB.cs)}
     </div>
-    <p class="sub" style="margin:12px 0 0">${together.length ? `Gemeinsam im Doppel: ${together.length} ${together.length === 1 ? 'Spiel' : 'Spiele'}, ${tw} gewonnen (${pct(tw / together.length)}).` : 'Noch nie zusammen im Doppel gespielt.'}</p>
+    <p class="sub" style="margin:12px 0 0">${together.length ? `Zusammen im Doppel: ${pct(tw / together.length)} Siege.` : 'Noch nie zusammen im Doppel gespielt.'}</p>
     ${dualChart(rA.hist, rB.hist) ? `<div style="margin-top:14px"><p class="section-t">Wertungsverlauf</p>${dualChart(rA.hist, rB.hist)}<div class="legend"><span><i style="background:#3fd0e0"></i>${esc(nameOf(A))}</span><span><i style="background:#f3f6fa"></i>${esc(nameOf(B))}</span></div></div>` : ''}
     ${duels.length ? `<div style="margin-top:14px"><p class="section-t">Letzte Duelle</p><div class="hist">${[...duels].reverse().slice(0, 5).map(histItem).join('')}</div></div>` : ''}`;
 }
@@ -2362,7 +2369,7 @@ function renderDyp() {
   const ses = $('#dypSession');
   if (S.dyp.round > 0) {
     ses.hidden = false;
-    ses.innerHTML = `${icon('info')}<div class="grow">Turnier läuft seit ${fmtDay(S.dyp.startedAt) === 'Heute' ? 'heute' : fmtDay(S.dyp.startedAt)}, ${fmtTime(S.dyp.startedAt)} Uhr, Runde ${S.dyp.round}.<p>Spielt so viele Runden, wie die Pause hergibt. Beim nächsten Mal könnt ihr weitermachen oder neu starten. Gespeichert auf diesem Gerät.</p></div>`;
+    ses.innerHTML = `${icon('info')}<div class="grow">Turnier läuft seit ${fmtDay(S.dyp.startedAt) === 'Heute' ? 'heute' : fmtDay(S.dyp.startedAt)}, ${fmtTime(S.dyp.startedAt)} Uhr, Runde ${S.dyp.round}.<p>Geht über mehrere Pausen weiter. Gespeichert auf diesem Gerät.</p></div>`;
   } else ses.hidden = true;
   $('#dypPlayers').innerHTML = players.length
     ? players.map(p => `<button class="pchip" data-action="dypToggle" data-pid="${esc(p.id)}" aria-pressed="${present.has(p.id)}">${present.has(p.id) ? icon('check') : ''}${esc(p.name)}</button>`).join('')
@@ -2387,7 +2394,7 @@ function renderDyp() {
       const pb = winProb(f.blue.map(ratingOf), f.green.map(ratingOf));
       return `<div class="card fixture ${f.done ? 'done' : ''}">
         <div class="row" style="justify-content:space-between"><h3>Runde ${S.dyp.round}, Spiel ${i + 1}</h3>
-          <span class="tag ${f.done ? '' : 'dyp'}">${f.done ? 'gewertet' : `Prognose ${pct(pb)} : ${pct(1 - pb)}`}</span></div>
+          <span class="tag ${f.done ? '' : 'dyp'}">${f.done ? 'gewertet' : `Prognose ${pctP(pb)} : ${pctP(1 - pb)}`}</span></div>
         <div class="fx-teams">${team('blue', f.blue, 'sb')}${team('green', f.green, 'sg')}</div>
         ${f.done ? '' : `<button class="btn primary block" data-action="dypSubmit" data-fx="${i}">${icon('check')}Ergebnis werten</button>`}
       </div>`;
@@ -2409,7 +2416,7 @@ function renderDyp() {
     add(r.blue, r.sb, r.sg); add(r.green, r.sg, r.sb);
   });
   const rows = Object.values(t).sort((a, b) => b.w - a.w || b.gd - a.gd || a.n - b.n);
-  $('#dypTableSub').textContent = `${res.length} ${res.length === 1 ? 'Spiel' : 'Spiele'} seit ${fmtTime(S.dyp.startedAt || Date.now())} Uhr. Sieger nach Siegen, dann Tordifferenz.`;
+  $('#dypTableSub').textContent = 'Nach Siegen, dann Tordifferenz.';
   $('#dypTableBody').innerHTML = rows.map((e, i) => `<tr class="clickable" data-action="profile" data-pid="${esc(e.id)}">
     <td class="rank ${i === 0 ? 'top' : ''}">${i + 1}</td><td style="font-weight:600">${esc(nameOf(e.id))}</td>
     <td class="ctr mono">${e.n}</td><td class="ctr mono" style="color:var(--green)">${e.w}</td>
@@ -2424,7 +2431,7 @@ async function dypDraw() {
     if (!ok) return;
   }
   if (S.dyp.round > 0 && Date.now() - (S.dyp.lastDraw || 0) > 8 * 3600e3) {
-    const restart = await ask({ title: 'Neue Pause, neues Turnier?', msg: `Das laufende Turnier ist von ${fmtDay(S.dyp.startedAt).toLowerCase() === 'heute' ? 'heute' : fmtDate(S.dyp.startedAt)} (${S.dyp.round} ${S.dyp.round === 1 ? 'Runde' : 'Runden'}). Ihr könnt die Tabelle weiterführen oder heute neu starten. Gewertete Spiele bleiben in jedem Fall in der Liga.`, ok: 'Neu starten', cancel: 'Weiterspielen' });
+    const restart = await ask({ title: 'Neues Turnier?', msg: `Das Turnier vom ${fmtDate(S.dyp.startedAt)} läuft noch (${S.dyp.round} ${S.dyp.round === 1 ? 'Runde' : 'Runden'}).`, ok: 'Neu starten', cancel: 'Weiterspielen' });
     if (restart) S.dyp = { present: S.dyp.present, mode: S.dyp.mode, round: 0, fixtures: [], resting: [], rest: {}, pair: {}, opp: {}, results: [], startedAt: 0 };
   }
   const plan = planRound(ids, S.dyp, S.dyp.mode === 'fair', ratingOf);
@@ -2475,7 +2482,7 @@ function altitudeChart(hist) {
     <polyline points="${pts.join(' ')}" fill="none" stroke="#3fd0e0" stroke-width="2" stroke-linejoin="round"/>
     <circle cx="${x(peak)}" cy="${y(vals[peak])}" r="3" fill="none" stroke="#e063e8" stroke-width="1.5"/>
     <circle cx="${x(vals.length - 1)}" cy="${y(vals[vals.length - 1])}" r="4" fill="#3fd0e0"/>
-    <text x="${pl}" y="${H - 3}">Start</text><text x="${W - pr}" y="${H - 3}" text-anchor="end">Spiel ${vals.length - 1}</text>
+    <text x="${pl}" y="${H - 3}">${fmtDate(hist[0][0])}</text><text x="${W - pr}" y="${H - 3}" text-anchor="end">heute</text>
   </svg>`;
 }
 
@@ -2517,9 +2524,9 @@ function renderProfile(pid) {
 
   $('#profBody').innerHTML = `
     <div class="stats4">
-      <div class="kpi"><div class="v"><span style="color:var(--green)">${r.wins}</span>:<span style="color:var(--red)">${r.losses}</span></div><div class="k">Bilanz</div></div>
       <div class="kpi"><div class="v">${r.games ? pct(rate) : '–'}</div><div class="k">Siegquote</div></div>
-      <div class="kpi"><div class="v">${r.games ? signed(r.gf - r.ga) : '–'}</div><div class="k">Tordiff.</div></div>
+      <div class="kpi"><div class="v" style="color:var(--green)">${r.games ? (r.gf / r.games).toFixed(1).replace('.', ',') : '–'}</div><div class="k">Tore/Spiel</div></div>
+      <div class="kpi"><div class="v" style="color:var(--red)">${r.games ? (r.ga / r.games).toFixed(1).replace('.', ',') : '–'}</div><div class="k">Gegentore</div></div>
       <div class="kpi"><div class="v">${r.best}</div><div class="k">Beste Serie</div></div>
     </div>
     ${(() => { const t = hallOfFame().titles[pid]; return t ? `<div class="banner info" style="padding:10px 13px">${icon('laurel')}<div class="grow">${[t.seasons ? `${t.seasons}× Saisonsieger` : '', t.months ? `${t.months}× Monatssieger` : ''].filter(Boolean).join(', ')}</div></div>` : ''; })()}
@@ -2527,19 +2534,18 @@ function renderProfile(pid) {
     <div class="row" style="justify-content:space-between"><span class="section-t" style="margin:0">Letzte ${Math.min(10, r.form.length) || ''} Spiele</span>
       <span class="form" style="gap:4px">${r.form.map(w => `<i class="${w ? 'w' : 'l'}" style="width:14px;height:14px;border-radius:4px"></i>`).join('') || '<span class="muted small">noch keine</span>'}</span></div>
     <div class="h2h">
-      ${h2h('Angstgegner', nem, v => `${v.w} : ${v.l}`, 'var(--red)', 'Niemand mit negativer Bilanz')}
-      ${h2h('Lieblingsgegner', fav, v => `${v.w} : ${v.l}`, 'var(--green)', 'Noch keiner mit 2 Siegen')}
-      ${h2h('Bester Doppelpartner', mate, v => `${pct(v.w / (v.w + v.l))} aus ${v.w + v.l}`, 'var(--cyan)', 'Ab 2 gemeinsamen Doppeln')}
+      ${h2h('Angstgegner', nem, v => `${v.w} : ${v.l}`, 'var(--red)', 'Keiner')}
+      ${h2h('Lieblingsgegner', fav, v => `${v.w} : ${v.l}`, 'var(--green)', 'Noch offen')}
+      ${h2h('Bester Doppelpartner', mate, v => `${pct(v.w / (v.w + v.l))} Siege`, 'var(--cyan)', 'Noch offen')}
     </div>
     <div class="h2h"><div class="it" style="display:block">
       <div class="row" style="justify-content:space-between"><span class="k">Position im Doppel</span><span class="tier ${pv.key === 'f' || pv.key === 'd' ? 't3' : ''}">${pv.label}</span></div>
-      <div style="margin-top:8px;font-size:13px"><div class="row" style="justify-content:space-between"><span>Sturm</span><span class="mono">${fT ? `${pct(fR)} (${r.fw}/${fT}), ${over(pv.fRaw)}` : '–'}</span></div><div class="posbar"><i style="width:${fR * 100}%;background:var(--blue)"></i></div></div>
-      <div style="margin-top:8px;font-size:13px"><div class="row" style="justify-content:space-between"><span>Abwehr</span><span class="mono">${dT ? `${pct(dR)} (${r.dw}/${dT}), ${over(pv.dRaw)}` : '–'}</span></div><div class="posbar"><i style="width:${dR * 100}%;background:var(--green)"></i></div></div>
-      <p class="sub" style="margin:8px 0 0;font-size:12px">Prozent = Siege über (+) oder unter (−) der Erwartung vor dem Spiel. Das rechnet Glück mit starken Partnern heraus.</p>
+      <div style="margin-top:8px;font-size:13px"><div class="row" style="justify-content:space-between"><span>Sturm</span><span class="mono">${fT ? `${pct(fR)} Siege, ${over(pv.fRaw)}` : '–'}</span></div><div class="posbar"><i style="width:${fR * 100}%;background:var(--blue)"></i></div></div>
+      <div style="margin-top:8px;font-size:13px"><div class="row" style="justify-content:space-between"><span>Abwehr</span><span class="mono">${dT ? `${pct(dR)} Siege, ${over(pv.dRaw)}` : '–'}</span></div><div class="posbar"><i style="width:${dR * 100}%;background:var(--green)"></i></div></div>
+      <p class="sub" style="margin:8px 0 0;font-size:12px">+/− = über oder unter der Erwartung</p>
     </div></div>
     <div><p class="section-t">Abzeichen: ${bl.filter(x => x.got).length} von ${bl.length}</p>
-      <div class="badges">${bl.map(x => `<button class="bdg ${x.got ? '' : 'off'}" data-action="badge" data-desc="${esc(`${x.name}: ${x.desc}${x.got ? ' (geschafft)' : ''}`)}">${icon(x.got ? 'laurel' : 'lock')}${esc(x.name)}</button>`).join('')}</div>
-      <p class="sub" style="margin:6px 0 0;font-size:12px">Antippen zeigt, wofür es das Abzeichen gibt.</p></div>
+      <div class="badges">${bl.map(x => `<button class="bdg ${x.got ? '' : 'off'}" data-action="badge" data-desc="${esc(`${x.name}: ${x.desc}${x.got ? ' (geschafft)' : ''}`)}">${icon(x.got ? 'laurel' : 'lock')}${esc(x.name)}</button>`).join('')}</div></div>
     ${recent.length ? `<div><p class="section-t">Letzte Spiele</p><div class="hist">${recent.map(histItem).join('')}</div></div>` : ''}
     <div class="row wrap-ok" style="border-top:1px dashed var(--line-soft);padding-top:12px">
       <button class="btn sm" data-action="compareWith" data-pid="${esc(pid)}">${icon('compare')}Mit jemandem vergleichen</button>
@@ -2580,7 +2586,7 @@ async function renamePlayer(pid) {
   const p = D().players.get(pid);
   if (!p) return;
   const v = await ask({
-    title: 'Name ändern', msg: 'Der neue Name erscheint überall, auch bei allen bisherigen Spielen.', ok: 'Speichern',
+    title: 'Name ändern', ok: 'Speichern',
     input: {
       label: 'Neuer Name', value: p.name,
       validate: raw => { const n = normName(raw); if (!n) return 'Name darf nicht leer sein.'; if (n.length > CFG.nameMax) return `Maximal ${CFG.nameMax} Zeichen.`; if (nameTaken(n, pid)) return 'Diesen Namen gibt es schon.'; return ''; }
@@ -2588,12 +2594,12 @@ async function renamePlayer(pid) {
   });
   if (v == null) return;
   updatePlayer(pid, { name: normName(v) });
-  toast('Name geändert. Alle bisherigen Spiele zeigen den neuen Namen.', 'success');
+  toast('Name geändert.', 'success');
 }
 async function archivePlayer(pid) {
   const p = D().players.get(pid);
   if (!p) return;
-  const ok = await ask({ title: `${p.name} archivieren?`, msg: 'Der Spieler verschwindet aus Auswahl und Rangliste. Alle Spiele bleiben erhalten und zählen weiter für die Gegner. Jederzeit wieder reaktivierbar.', ok: 'Archivieren', danger: true });
+  const ok = await ask({ title: `${p.name} archivieren?`, msg: 'Verschwindet aus Auswahl und Rangliste. Die Spiele bleiben erhalten, Reaktivieren ist jederzeit möglich.', ok: 'Archivieren', danger: true });
   if (!ok) return;
   updatePlayer(pid, { archived: true });
   toast(`${p.name} archiviert.`, 'info');
@@ -2627,7 +2633,7 @@ async function tryAdminLogin() {
     session.set('adminFails', 0);
     closeDialog('dlgAdmin');
     setAdmin(true);
-    toast('Admin-Modus aktiv. Annullieren und Archivieren sind freigeschaltet.', 'success');
+    toast('Admin-Modus aktiv.', 'success');
   } else {
     const fails = session.get('adminFails', 0) + 1;
     session.set('adminFails', fails);
@@ -2741,23 +2747,18 @@ function renderSettings() {
     <div>
       <p class="section-t">Gespielt wird bis</p>
       <div class="seg" role="group" aria-label="Siegtore">${[5, 6, 7, 10, 0].map(v => `<button data-action="target" data-v="${v}" aria-pressed="${S.target === v}">${v || 'offen'}</button>`).join('')}</div>
-      <p class="sub" style="margin:8px 0 0">Für den „Sieg“-Knopf und die Plausibilitätsprüfung. Offiziell (ITSF/DTFB) wird bis 5 gespielt, im Hobbybereich meist bis 6. Verlängerung mit 2 Toren Vorsprung wird akzeptiert. Gilt nur für dieses Gerät.</p>
+      <p class="sub" style="margin:8px 0 0">Für den „Sieg“-Knopf und die Ergebnisprüfung auf diesem Gerät.</p>
     </div>
     <button class="btn sm" data-action="openQr" style="justify-self:start">${icon('qr')}QR-Code für den Tisch drucken</button>
     <label class="switch"><span>Signalton nach jedem Spiel<br><span class="muted small">Nur auf diesem Gerät</span></span><input type="checkbox" id="swSound" ${S.sound ? 'checked' : ''}></label>
-    <div>
-      <p class="section-t">Datensicherung</p>
-      <p class="sub" style="margin:0 0 10px">Einmal im Monat ein Backup ziehen schadet nie. Die JSON-Datei enthält alle Rohdaten.</p>
-      <div class="row wrap-ok"><button class="btn sm" data-action="exportJson" ${d ? '' : 'disabled'}>${icon('download')}Backup (JSON)</button><button class="btn sm" data-action="exportCsv" ${d ? '' : 'disabled'}>${icon('download')}Spiele als CSV</button></div>
-    </div>
     ${S.isAdmin && d ? (() => {
       const v = d.valid, goals = v.reduce((s, m) => s + m.sb + m.sg, 0);
       const act30 = new Set(v.filter(m => m.ts > Date.now() - 30 * DAY).flatMap(m => [...m.blueIds, ...m.greenIds])).size;
       const lb = store.get('lastBackup', 0), age = lb ? Math.floor((Date.now() - lb) / DAY) : null;
       return `<div><p class="section-t">Datensicherung (Admin)</p>
-        <div class="banner ${age == null || age > 30 ? 'warn' : 'info'}" style="padding:10px 13px">${icon(age == null || age > 30 ? 'alert' : 'check')}<div class="grow">${age == null ? 'Von diesem Gerät wurde noch kein Backup gezogen.' : `Letztes Backup von diesem Gerät: vor ${age} ${age === 1 ? 'Tag' : 'Tagen'}.`} Firebase macht im Gratis-Tarif keine eigenen Backups.</div></div>
-        <div class="row wrap-ok" style="margin-top:8px"><button class="btn sm" data-action="restoreBackup">${icon('restore')}Backup einspielen</button></div>
-        <p class="sub" style="margin:6px 0 0">Ergänzt nur, was fehlt. Vorhandene Spieler und Spiele werden nie überschrieben.</p></div>
+        <div class="banner ${age == null || age > 30 ? 'warn' : 'info'}" style="padding:10px 13px">${icon(age == null || age > 30 ? 'alert' : 'check')}<div class="grow">${age == null ? 'Noch kein Backup von diesem Gerät.' : `Letztes Backup von diesem Gerät: vor ${age} ${age === 1 ? 'Tag' : 'Tagen'}.`} Empfohlen: einmal im Monat.</div></div>
+        <div class="row wrap-ok" style="margin-top:8px"><button class="btn sm" data-action="exportJson">${icon('download')}Backup (JSON)</button><button class="btn sm" data-action="exportCsv">${icon('download')}Spiele als CSV</button><button class="btn sm" data-action="restoreBackup">${icon('restore')}Backup einspielen</button></div>
+        <p class="sub" style="margin:6px 0 0">Einspielen ergänzt nur Fehlendes und überschreibt nichts.</p></div>
         <div><p class="section-t">Nutzung (nur im Admin-Modus sichtbar)</p>
         <div class="kpis">${[[v.length, 'Spiele gesamt'], [voided, 'annulliert'], [goals, 'Tore'], [act30, 'Aktive in 30 Tagen']].map(([x, k]) => `<div class="kpi"><div class="v">${x}</div><div class="k">${k}</div></div>`).join('')}</div>
         <p class="section-t" style="margin-top:12px">Spiele pro Woche</p>${activityChart(v)}</div>`;
@@ -2765,13 +2766,11 @@ function renderSettings() {
     ${S.isAdmin && archived.length ? `<div><p class="section-t">Archivierte Spieler</p><div class="h2h">${archived.map(p => `<div class="it"><span>${esc(p.name)}</span><button class="btn sm" data-action="unarchive" data-pid="${esc(p.id)}">${icon('restore')}Reaktivieren</button></div>`).join('')}</div></div>` : ''}
     <details>
       <summary class="section-t" style="cursor:pointer">Wie funktioniert die Wertung?</summary>
-      <p class="sub">Jeder startet bei 1500. Die Skala ist wie bei Elo: 200 Punkte Unterschied heißen, der Stärkere gewinnt etwa 3 von 4 Spielen. Ein Sieg gegen Stärkere bringt mehr als gegen Schwächere, im Doppel zählt die Stärke beider Partner, und die Tordifferenz fließt ein: Ein 7:6 bewegt halb so viel wie ein 7:0.</p>
-      <p class="sub">Solange das System jemanden noch nicht kennt, sind die Ausschläge groß; nach etwa 10 bis 20 Spielen sind es meist nur noch 10 bis 30 Punkte. Deshalb gibt es erst nach ${CFG.placement} Spielen Einstufung einen Ranglistenplatz.</p>
-      <p class="sub">Die Wertung wird bei jedem Laden aus allen Spielen neu berechnet. Annullierte Spiele verschwinden damit vollständig aus allen Zahlen.</p>
+      <p class="sub">Start bei 1500. Bei 200 Punkten Unterschied gewinnt der Stärkere etwa 3 von 4 Spielen. Siege gegen Stärkere bringen mehr, knappe Siege weniger als deutliche. Einen Ranglistenplatz gibt es ab ${CFG.placement} Spielen.</p>
     </details>
     <div class="row" style="gap:12px;border-top:1px solid var(--line-soft);padding-top:14px">
       <div class="logo" style="width:64px;height:44px" aria-hidden="true"><svg viewBox="0 0 64 34" style="width:54px;height:28px;--zw:1.8;--zt:1.2"><use href="#i-lf1"/></svg></div>
-      <p class="sub" style="margin:0">Das Logo zeigt den LF 1 Zaunkönig, 1940 von Prof. Hermann Winter und Studierenden am Institut entworfen, gebaut und geflogen.</p>
+      <p class="sub" style="margin:0">Logo: LF 1 Zaunkönig, 1940 am Institut entworfen, gebaut und geflogen.</p>
     </div>`;
   $('#swSound').onchange = e => { S.sound = e.target.checked; store.set('sound', S.sound); if (S.sound) chime(); };
 }
@@ -2830,7 +2829,7 @@ const ACTIONS = {
     const m = D().all.find(x => x.id === el.dataset.mid);
     if (!m) return;
     if (!canUndo(m)) {
-      const ok = await ask({ title: 'Spiel annullieren?', msg: `${m.blueIds.map(nameOf).join(' & ')} ${m.sb} : ${m.sg} ${m.greenIds.map(nameOf).join(' & ')} vom ${fmtDate(m.ts)}. Die Wertung aller Beteiligten wird neu berechnet. Admins können das Spiel später wiederherstellen.`, ok: 'Annullieren', danger: true });
+      const ok = await ask({ title: 'Spiel annullieren?', msg: `${m.blueIds.map(nameOf).join(' & ')} ${m.sb} : ${m.sg} ${m.greenIds.map(nameOf).join(' & ')} vom ${fmtDate(m.ts)}. Lässt sich später wiederherstellen.`, ok: 'Annullieren', danger: true });
       if (!ok) return;
     }
     setVoided(m.id, true);
@@ -2862,7 +2861,7 @@ const ACTIONS = {
   },
   dypSubmit: el => dypSubmit(Number(el.dataset.fx)),
   dypReset: async () => {
-    const ok = await ask({ title: 'Turnier beenden?', msg: 'Runden und Turnier-Tabelle werden zurückgesetzt. Alle gewerteten Spiele bleiben in Rangliste und Verlauf.', ok: 'Beenden' });
+    const ok = await ask({ title: 'Turnier beenden?', msg: 'Runden und Tabelle werden zurückgesetzt, gewertete Spiele bleiben.', ok: 'Beenden' });
     if (!ok) return;
     S.dyp = { present: S.dyp.present, mode: S.dyp.mode, round: 0, fixtures: [], resting: [], rest: {}, pair: {}, opp: {}, results: [], startedAt: 0 };
     saveDyp(); renderDyp();
