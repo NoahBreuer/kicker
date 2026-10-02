@@ -163,6 +163,21 @@ select.dup{border-color:var(--red);box-shadow:0 0 0 3px var(--red-dim)}
 .banner .grow{flex:1}
 .banner p{margin:2px 0 0;opacity:.88;font-size:13px}
 
+/* ---------- Info-Blasen ---------- */
+#tipBubble{position:fixed;z-index:200;background:#0b121c;color:var(--text);border:1px solid #3a5070;border-radius:10px;padding:8px 11px;font-size:13px;line-height:1.4;box-shadow:0 10px 28px rgba(0,0,0,.5);pointer-events:none;animation:tin .12s ease-out}
+[data-tip]{cursor:help}
+.tipq{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1px solid currentColor;font-size:10px;font-weight:700;opacity:.65;margin-left:4px;line-height:1}
+dialog [data-tip]{cursor:help}
+
+/* ---------- Schnellauswahl ---------- */
+.quickpick{margin-bottom:12px}
+.qp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.qp-list{display:flex;flex-wrap:wrap;gap:6px}
+.qp{display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;min-height:38px;padding:4px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel-0);color:var(--text);font-size:14px;font-weight:600;line-height:1.15}
+.qp small{font-size:10.5px;font-weight:600;letter-spacing:.02em}
+.qp.on.b{border-color:var(--blue);background:var(--blue-dim)} .qp.on.b small{color:#9cc4ff}
+.qp.on.g{border-color:var(--green);background:var(--green-dim)} .qp.on.g small{color:#8ef0c6}
+
 /* ---------- Highlights, Tipps, Abzeichen ---------- */
 .pos-tip span{flex:1;min-width:0}
 .pos-tip svg.i{flex:none}
@@ -339,6 +354,7 @@ button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 .lamp.up{color:var(--green)} .lamp.down{color:var(--red)} .lamp.new{color:var(--cyan)}
 .flap.prov b{color:var(--muted)}
 .bdiv{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);padding:10px 2px 6px;margin-top:6px;border-top:1px solid #18212c}
+.flap b.tt{color:var(--amber)}
 .flap b.fs{color:#7fe3b5}
 .flap b.fn{color:#ff9aa3}
 .flap.pos b{color:#7fe3b5} .flap.neg b{color:#ff9aa3}
@@ -419,6 +435,12 @@ button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 .fx-team .score{font-size:30px;width:48px}
 .fx-team .step{width:40px;height:40px;font-size:19px}
 .fixture.done{opacity:.6}
+
+/* ---------- Turnierliste ---------- */
+.tour-list{display:grid;gap:6px}
+.tour-it{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--panel-0);color:inherit;font-size:14px}
+.tour-it.on{border-color:rgba(63,208,224,.5);background:var(--cyan-dim)}
+.fx-team .winbtn{justify-self:end}
 
 /* ---------- Profile ---------- */
 .prof-head{display:flex;gap:12px;align-items:center}
@@ -585,6 +607,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
         </div>
       </div>
 
+      <div class="quickpick" id="quickPick" hidden></div>
       <div class="teams">
         <div class="team blue">
           <div class="team-head">
@@ -690,7 +713,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
       </div>
       <div id="sotm"></div>
       <div class="board" id="board">
-        <div class="brow bhead" id="boardHead" aria-hidden="true"></div>
+        <div class="brow bhead" id="boardHead"></div>
         <div id="lbBody" role="list" aria-label="Rangliste"></div>
       </div>
     </div>
@@ -707,7 +730,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
       <div class="card-head"><div><h3>Sturm oder Abwehr?</h3><p class="sub">Siege über oder unter der Erwartung, je Position.</p></div></div>
       <div id="posTop"></div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>Spieler</th><th class="ctr">Sturm</th><th class="ctr">Abwehr</th><th>Tendenz</th></tr></thead>
+        <thead><tr><th>Spieler</th><th class="ctr"><span data-tip="Siege über (+) oder unter (−) der Erwartung im Sturm." tabindex="0">Sturm<span class="tipq">?</span></span></th><th class="ctr"><span data-tip="Siege über (+) oder unter (−) der Erwartung in der Abwehr." tabindex="0">Abwehr<span class="tipq">?</span></span></th><th><span data-tip="Erst bei einem deutlichen Unterschied ab je 6 Doppeln pro Position." tabindex="0">Tendenz<span class="tipq">?</span></span></th></tr></thead>
         <tbody id="posBody"></tbody>
       </table></div>
     </div>
@@ -756,36 +779,12 @@ body[data-mode="1v1"] .only2v2{display:none!important}
   <section class="view" id="view-dyp" role="tabpanel" hidden>
     <div class="card">
       <div class="card-head">
-        <div>
-          <h2>DYP-Turnier</h2>
-          <p class="sub">Draw Your Partner: Anwesende markieren, jede Runde neue Partner und Gegner.</p>
-        </div>
+        <div><h2>DYP-Turniere</h2><p class="sub">Draw Your Partner: jede Runde neue Partner und Gegner.</p></div>
+        <button class="btn primary sm" data-action="tourNew"><svg class="i"><use href="#i-plus"/></svg>Neues Turnier</button>
       </div>
-      <div class="banner info" id="dypSession" hidden style="margin-bottom:12px"></div>
-      <div class="row" style="justify-content:space-between;margin-bottom:8px">
-        <span class="section-t" style="margin:0" id="dypCount">Anwesend: 0</span>
-        <span class="row"><button class="linkbtn" data-action="dypAll" data-v="1">Alle</button><span class="dim">|</span><button class="linkbtn" data-action="dypAll" data-v="0">Keiner</button></span>
-      </div>
-      <div class="plist" id="dypPlayers"></div>
-      <div class="row wrap-ok" style="margin-top:14px;justify-content:space-between">
-        <div class="seg" role="group" aria-label="Auslosung">
-          <button data-action="dypMode" data-v="fair" title="Möglichst knappe Spiele">Ausgeglichen</button>
-          <button data-action="dypMode" data-v="random">Reiner Zufall</button>
-        </div>
-        <div class="row">
-          <button class="btn sm ghost" data-action="dypReset"><svg class="i"><use href="#i-restore"/></svg>Turnier beenden</button>
-          <button class="btn primary" data-action="dypDraw"><svg class="i"><use href="#i-dice"/></svg>Runde auslosen</button>
-        </div>
-      </div>
+      <div id="tourList" class="tour-list"></div>
     </div>
-    <div id="dypRound" class="view"></div>
-    <div class="card" id="dypTableCard" hidden>
-      <div class="card-head"><div><h3>Turnier-Tabelle</h3><p class="sub" id="dypTableSub"></p></div></div>
-      <div class="tbl-wrap"><table>
-        <thead><tr><th class="ctr">#</th><th>Spieler</th><th class="ctr">Spiele</th><th class="ctr">Siege</th><th class="num">Tordiff.</th></tr></thead>
-        <tbody id="dypTableBody"></tbody>
-      </table></div>
-    </div>
+    <div id="tourView" class="view"></div>
   </section>
 </main>
 
@@ -980,7 +979,9 @@ function shuffle(a) {
      auch nach 500 Spielen noch steigen können. */
 // Parameter per Simulation (Rennen bis 7, 18 Spieler, 1 Jahr, 6 Durchläufe) abgestimmt:
 // BETA = Zufallsanteil pro Spiel, TAU = wie schnell sich Können ändern darf.
-const MU0 = 25, SIGMA0 = 25 / 3, BETA = 5.5, TAU = 0.3, SIGMA_MIN = 0.8;
+// Simulation mit „bis 5, 2 Abstand, max. 7“: kaum zufälliger als „bis 7“, daher gleicher Zufallsanteil (BETA_EXP = 0).
+const MU0 = 25, SIGMA0 = 25 / 3, BETA7 = 5.5, BETA_EXP = 0, TAU = 0.3, SIGMA_MIN = 0.8;
+const betaFor = (T = 7) => BETA7 * Math.pow(7 / Math.max(3, Math.min(T || 7, 10)), BETA_EXP);
 const RATING0 = 1500;
 
 function erf(x) {
@@ -998,21 +999,22 @@ function fresh() {
   return {
     mu: MU0, sigma: SIGMA0, games: 0, wins: 0, losses: 0, gf: 0, ga: 0, cs: 0,
     streak: 0, best: 0, first: 0, last: 0, hist: [], form: [],
-    fw: 0, fl: 0, dw: 0, dl: 0, fe: 0, de: 0, giant: 0, dog: 0, closeW: 0, closeN: 0, lastVs: {}, opp: {}, par: {}
+    fw: 0, fl: 0, dw: 0, dl: 0, fe: 0, de: 0, giant: 0, dog: 0, closeW: 0, closeN: 0, fGF: 0, fGX: 0, fN: 0, dGA: 0, dGX: 0, dN: 0, sN: 0, sW: 0, sE: 0, lastVs: {}, opp: {}, par: {}
   };
 }
 
 /* Ein Team ist so stark wie der Durchschnitt seiner Spieler (gewichtetes TrueSkill,
    Gewicht 1/n). So sind 1v1- und 2v2-Prognosen auf derselben Skala. */
 const teamMu = T => T.reduce((s, r) => s + r.mu, 0) / T.length;
-function teamC(A, B) {
+function teamC(A, B, beta) {
   const v = A.reduce((s, r) => s + r.sigma * r.sigma, 0) / (A.length * A.length) +
     B.reduce((s, r) => s + r.sigma * r.sigma, 0) / (B.length * B.length);
-  return Math.sqrt(2 * BETA * BETA + v);
+  return Math.sqrt(2 * beta * beta + v);
 }
-function winProb(A, B) { return cdf((teamMu(A) - teamMu(B)) / teamC(A, B)); }
-function tsUpdate(W, L, mf = 1) {
-  const c = teamC(W, L);
+// T = Siegtore des Spiels (für Prognosen: aktuelle Liga-Einstellung)
+function winProb(A, B, T = (typeof S !== 'undefined' && S.league ? S.league.target : 7)) { return cdf((teamMu(A) - teamMu(B)) / teamC(A, B, betaFor(T))); }
+function tsUpdate(W, L, mf = 1, beta = BETA7) {
+  const c = teamC(W, L, beta);
   const t = (teamMu(W) - teamMu(L)) / c;
   const cd = cdf(t);
   const v = cd > 1e-9 ? pdf(t) / cd : -t;
@@ -1024,6 +1026,29 @@ function tsUpdate(W, L, mf = 1) {
   };
   W.forEach(r => apply(r, 1, W.length));
   L.forEach(r => apply(r, -1, L.length));
+}
+
+/* Erwarteter Toranteil q eines Teams, wenn es mit Wahrscheinlichkeit p gewinnt
+   (Torrennen nach den Regeln des Spiels, per DP invertiert, gecacht). */
+const _qCache = new Map();
+function raceWinP(q, R) {
+  const memo = new Map(), by = R.winBy || 1, cap = R.cap || 0, T = R.target;
+  const done = (x, y) => (x >= T && x - y >= by) || (cap && x >= cap);
+  const f = (a, b) => {
+    if (a + b > 60) return 0.5;
+    const k = a * 128 + b; if (memo.has(k)) return memo.get(k);
+    const v = done(a, b) ? 1 : done(b, a) ? 0 : q * f(a + 1, b) + (1 - q) * f(a, b + 1);
+    memo.set(k, v); return v;
+  };
+  return f(0, 0);
+}
+function goalShare(p, R) {
+  const key = Math.round(p * 200) + '|' + R.target + '|' + (R.winBy || 1) + '|' + (R.cap || 0);
+  if (_qCache.has(key)) return _qCache.get(key);
+  const t = Math.min(Math.max(Math.round(p * 200) / 200, 0.005), 0.995);
+  let lo = 0, hi = 1;
+  for (let i = 0; i < 30; i++) { const m = (lo + hi) / 2; raceWinP(m, R) < t ? lo = m : hi = m; }
+  const q = (lo + hi) / 2; _qCache.set(key, q); return q;
 }
 
 /* Spielt eine chronologisch sortierte Liste gültiger Spiele komplett durch. */
@@ -1038,11 +1063,11 @@ function replay(matches) {
     const before = {};
     ids.forEach(id => { before[id] = disp(R.get(id)); });
     [...B, ...G].forEach(r => { r.sigma = Math.min(Math.sqrt(r.sigma * r.sigma + TAU * TAU), SIGMA0); });
-    const pBlue = winProb(B, G);
+    const pBlue = winProb(B, G, m.target);
     const blueWon = m.winner === 'blue';
     // Knapper Sieg zählt weniger: Anteil der Tordifferenz an den Siegtoren, 0,5 … 1
     const mf = 0.5 + 0.5 * Math.abs(m.sb - m.sg) / Math.max(m.sb, m.sg, 1);
-    tsUpdate(blueWon ? B : G, blueWon ? G : B, mf);
+    tsUpdate(blueWon ? B : G, blueWon ? G : B, mf, betaFor(m.target));
 
     const deltas = {};
     const prevStreak = {}, prevVs = {};
@@ -1068,10 +1093,12 @@ function replay(matches) {
       const diff = Math.abs(gf - ga);
       if (diff === 1 || (diff === 2 && Math.min(gf, ga) >= 5)) { r.closeN++; if (won) r.closeW++; } // knapp oder Verlängerung
       const pos = isBlue ? m.posB : m.posG;
+      const q = goalShare(exp, m.rules), tot = gf + ga;
       if (m.mode === '2v2' && pos) {
-        if (pos.forward === id) { won ? r.fw++ : r.fl++; r.fe += exp; }
-        else if (pos.defense === id) { won ? r.dw++ : r.dl++; r.de += exp; }
+        if (pos.forward === id) { won ? r.fw++ : r.fl++; r.fe += exp; r.fGF += gf; r.fGX += q * tot; r.fN++; }
+        else if (pos.defense === id) { won ? r.dw++ : r.dl++; r.de += exp; r.dGA += ga; r.dGX += (1 - q) * tot; r.dN++; }
       }
+      if (m.mode === '1v1') { r.sN++; if (won) r.sW++; r.sE += exp; }
       const opps = isBlue ? m.greenIds : m.blueIds;
       opps.forEach(o => { const x = r.opp[o] || (r.opp[o] = { w: 0, l: 0 }); won ? x.w++ : x.l++; });
       if (m.mode === '1v1') r.lastVs = { ...r.lastVs, [opps[0]]: { won, ts: m.ts } };
@@ -1130,6 +1157,30 @@ function swapGain(fwR, dfR) {
   return (b.f + a.d) - (a.f + b.d);
 }
 
+/* ---------------- Schachtitel ----------------
+   Schwellen an die Liga-Skala (Start 1500) angepasst, nicht an echte FIDE-Zahlen. */
+const CHESS = [
+  { abbr: 'GM', name: 'Großmeister', min: 1750 },
+  { abbr: 'IM', name: 'Internationaler Meister', min: 1675 },
+  { abbr: 'FM', name: 'FIDE-Meister', min: 1600 },
+  { abbr: 'CM', name: 'Candidate Master', min: 1550 }
+];
+function chessTitle(rating, placed = true) { return placed ? CHESS.find(t => rating >= t.min) || null : null; }
+
+/* ---------------- Turniertabelle ---------------- */
+function tourTable(results) {
+  const t = {};
+  results.forEach(r => {
+    const add = (ids, gf, ga) => ids.forEach(id => { const e = t[id] || (t[id] = { id, n: 0, w: 0, gd: 0 }); e.n++; if (gf > ga) e.w++; e.gd += gf - ga; });
+    add(r.blue, r.sb, r.sg); add(r.green, r.sg, r.sb);
+  });
+  return Object.values(t).sort((a, b) => b.w - a.w || b.gd - a.gd || a.n - b.n);
+}
+function tourWinners(rows) {
+  if (!rows.length || rows[0].w < 1) return [];
+  return rows.filter(r => r.w === rows[0].w && r.gd === rows[0].gd).map(r => r.id);
+}
+
 /* ---------------- Abzeichen ---------------- */
 function badges(r, titles) {
   const pv = posFit(r);
@@ -1144,15 +1195,24 @@ function badges(r, titles) {
     { k: 'allround', name: 'Allrounder', desc: 'Je 10 Doppel im Sturm und in der Abwehr, beide mit positiver Bilanz', got: allround },
     { k: 'nerve', name: 'Nervenstark', desc: '5 knappe Spiele gewonnen (ein Tor Unterschied oder Verlängerung)', got: r.closeW >= 5 },
     { k: 'dog', name: 'Favoritenschreck', desc: '5 Siege als Außenseiter (höchstens 40 % Siegchance)', got: r.dog >= 5 },
-    { k: 'month', name: 'Monatssieger', desc: 'Einmal Spieler des Monats', got: !!(titles && titles.months) }
+    { k: 'month', name: 'Monatssieger', desc: 'Einmal Spieler des Monats', got: !!(titles && titles.months) },
+    { k: 'tour', name: 'Turniersieger', desc: 'Ein DYP-Turnier gewonnen', got: !!(titles && titles.tours) }
   ];
 }
 
 /* Passt ein Ergebnis zu "gespielt bis T"? Verlängerung mit 2 Toren Vorsprung ist erlaubt. */
-function plausibleScore(sb, sg, T) {
+/* Liga-Regeln: bis target, mit winBy Toren Vorsprung, höchstens bis cap (0 = ohne Deckel).
+   Beispiel bis 5, 2 Abstand, max 7: gültig sind 5:0…5:3, 6:4, 7:5 und 7:6. */
+function plausibleScore(sb, sg, rules) {
+  const R = typeof rules === 'number' ? { target: rules, winBy: 2, cap: 0 } : (rules || {});
+  const T = R.target, by = R.winBy || 1, cap = R.cap || 0;
   if (!T) return true;
   const w = Math.max(sb, sg), l = Math.min(sb, sg);
-  return (w === T && l < T) || (w > T && w - l === 2 && l >= T - 1);
+  if (w === T) return l <= T - by;                       // regulär gewonnen
+  if (w < T || l < T - 1) return false;                  // zu früh beendet oder keine Verlängerung
+  if (cap && w > cap) return false;
+  if (cap && w === cap) return w - l >= 1 && w - l <= by; // am Deckel reicht ein Tor
+  return w - l === by;                                    // Verlängerung: genau mit Vorsprung beendet
 }
 
 /* DYP: lost eine Runde. Pausieren muss, wer bisher am seltensten pausiert hat
@@ -1164,8 +1224,10 @@ function planRound(ids, st, fair, rOf, rnd = Math.random) {
   const tables = Math.floor(ids.length / 4);
   const nRest = ids.length - tables * 4;
   const last = new Set(st.resting || []);
-  const rest = st.rest || {}, pair = st.pair || {}, opp = st.opp || {};
-  const order = shuf([...ids]).sort((a, b) => ((rest[a] || 0) - (rest[b] || 0)) || ((last.has(a) ? 1 : 0) - (last.has(b) ? 1 : 0)));
+  const rest = st.rest || {}, pair = st.pair || {}, opp = st.opp || {}, played = st.played || {};
+  // Pausieren muss, wer im Turnier schon am meisten gespielt hat (Neue spielen also sofort),
+  // bei Gleichstand nicht zweimal hintereinander und wer seltener pausiert hat.
+  const order = shuf([...ids]).sort((a, b) => ((played[b] || 0) - (played[a] || 0)) || ((last.has(a) ? 1 : 0) - (last.has(b) ? 1 : 0)) || ((rest[a] || 0) - (rest[b] || 0)));
   const resting = order.slice(0, nRest), playing = order.slice(nRest);
   const key = (a, b) => (a < b ? a + '|' + b : b + '|' + a);
   let best = null;
@@ -1182,8 +1244,9 @@ function planRound(ids, st, fair, rOf, rnd = Math.random) {
     }
     if (!best || cost < best.cost) best = { cost, fx };
   }
-  const next = { rest: { ...rest }, pair: { ...pair }, opp: { ...opp } };
+  const next = { rest: { ...rest }, pair: { ...pair }, opp: { ...opp }, played: { ...played } };
   resting.forEach(id => { next.rest[id] = (next.rest[id] || 0) + 1; });
+  playing.forEach(id => { next.played[id] = (next.played[id] || 0) + 1; });
   best.fx.forEach(f => {
     [f.blue, f.green].forEach(([a, b]) => { next.pair[key(a, b)] = (next.pair[key(a, b)] || 0) + 1; });
     f.blue.forEach(a => f.green.forEach(c => { next.opp[key(a, c)] = (next.opp[key(a, c)] || 0) + 1; }));
@@ -1194,8 +1257,9 @@ function planRound(ids, st, fair, rOf, rnd = Math.random) {
 /* ---------------- Zustand ---------------- */
 const S = {
   fs: null, db: null, user: null,
-  playersRaw: [], matchesRaw: [],
-  loaded: { players: false, matches: false },
+  playersRaw: [], matchesRaw: [], toursRaw: [], configRaw: [],
+  league: Object.assign({ target: 5, winBy: 2, cap: 7 }, store.get('league', {})),
+  loaded: { players: false, matches: false, tournaments: false },
   meta: { players: { cache: true, pending: false }, matches: { cache: true, pending: false } },
   lastSync: 0,
   error: null,
@@ -1210,11 +1274,9 @@ const S = {
   histPlayer: '', histMode: 'all', histLimit: CFG.histPage,
   profileId: null,
   sound: store.get('sound', true),
-  target: [0, 5, 6, 7, 10].includes(store.get('target', 7)) ? store.get('target', 7) : 7,
+  tourSel: store.get('tourSel', ''), tourScores: {},
   cmpA: '', cmpB: '',
-  dyp: Object.assign({ present: [], mode: 'fair', round: 0, fixtures: [], resting: [], rest: {}, pair: {}, opp: {}, results: [], startedAt: 0 }, store.get('dyp', {}))
 };
-const saveDyp = () => store.set('dyp', S.dyp);
 
 /* ---------------- Daten normalisieren & ableiten ---------------- */
 function normMatch(d) {
@@ -1234,6 +1296,10 @@ function normMatch(d) {
     blueIds, greenIds,
     blueNames: Array.isArray(d.blueNames) ? d.blueNames : [],
     greenNames: Array.isArray(d.greenNames) ? d.greenNames : (Array.isArray(d.redNames) ? d.redNames : []),
+    // Ohne gespeicherte Regeln (ältere Spiele): ab 7 Toren war es „bis 7“, darunter schon „bis 5, 2 Abstand, max. 7“
+    target: Number(d.target) || (Math.max(sb, sg) >= 7 ? 7 : 5),
+    rules: d.target ? { target: Number(d.target), winBy: Number(d.winBy) || 1, cap: Number(d.cap) || 0 } : (Math.max(sb, sg) >= 7 ? { target: 7, winBy: 1, cap: 0 } : { target: 5, winBy: 2, cap: 7 }),
+    tour: d.tournamentId || null,
     sb, sg, winner: sb > sg ? 'blue' : 'green',
     posB: d.bluePositions || null, posG: d.greenPositions || d.redPositions || null,
     voided: !!d.voided, device: d.deviceId || null, source: d.source || null
@@ -1297,7 +1363,7 @@ function hallOfFame() {
   const key = S.version + '|fame|' + startOfDay();
   if (S.cache.has(key)) return S.cache.get(key);
   const valid = D().valid;
-  const res = { months: [], seasons: [], titles: {} };
+  const res = { months: [], seasons: [], titles: {}, tours: [] };
   if (valid.length) {
     const now = Date.now();
     const first = new Date(valid[0].ts || now);
@@ -1311,8 +1377,11 @@ function hallOfFame() {
       const pc = periodChamp(valid, new Date(y, 0, 1).getTime(), to);
       if (pc.n) res.seasons.push({ label: `Saison ${y}`, live: to > now, ...pc });
     }
-    const add = (id, kind) => { const t = res.titles[id] || (res.titles[id] = { months: 0, seasons: 0 }); t[kind]++; };
+    const add = (id, kind) => { const t = res.titles[id] || (res.titles[id] = { months: 0, seasons: 0, tours: 0 }); t[kind]++; };
     res.months.filter(x => !x.live && x.champ).forEach(x => add(x.champ.id, 'months'));
+    res.tours = S.toursRaw.filter(t => t.status === 'done' && Array.isArray(t.winners) && t.winners.length)
+      .sort((a, b) => (b.endedAt || 0) - (a.endedAt || 0));
+    res.tours.forEach(t => t.winners.forEach(id => add(id, 'tours')));
     res.seasons.filter(x => !x.live && x.champ).forEach(x => add(x.champ.id, 'seasons'));
     res.months.reverse(); res.seasons.reverse();
   }
@@ -1381,8 +1450,7 @@ function onErrorCleared() {
 }
 
 async function subscribe() {
-  const { collection, query, where, onSnapshot, getDocsFromCache } = S.fs;
-  const sessionStart = Date.now();
+  const { collection, onSnapshot } = S.fs;
 
   onSnapshot(collection(S.db, 'players'), { includeMetadataChanges: true }, snap => {
     S.meta.players = { cache: snap.metadata.fromCache, pending: snap.metadata.hasPendingWrites };
@@ -1396,28 +1464,50 @@ async function subscribe() {
     scheduleRender();
   }, err => handleError(err, 'players'));
 
-  const col = collection(S.db, 'matches');
+  // Liga-Einstellungen (ein einziges Dokument config/league)
+  onSnapshot(collection(S.db, 'config'), snap => {
+    const lg = snap.docs.find(d => d.id === 'league');
+    if (lg) {
+      const x = lg.data();
+      S.league = { target: Number(x.target) || 5, winBy: Number(x.winBy) || 1, cap: Number(x.cap) || 0 };
+      store.set('league', S.league);
+    }
+    scheduleRender();
+  }, err => console.warn('[Kicker] config', err));
+
+  incremental('matches', ['timestamp', 'voidedAt'], list => { S.matchesRaw = list; S.loaded.matches = true; S.version++; });
+  incremental('tournaments', ['updatedAt'], list => { S.toursRaw = list; S.loaded.tournaments = true; S.version++; });
+}
+
+/* Lädt eine Sammlung inkrementell: Bekanntes aus dem Offline-Cache, vom Server nur,
+   was sich seit der letzten Sitzung geändert hat (Felder = Änderungs-Zeitstempel). */
+async function incremental(name, fields, onData) {
+  const { collection, query, where, onSnapshot, getDocsFromCache } = S.fs;
+  const sessionStart = Date.now();
+  const col = collection(S.db, name);
   const docs = new Map();
   try {
     const cached = await getDocsFromCache(col);
     cached.forEach(d => docs.set(d.id, { id: d.id, ...d.data() }));
   } catch { /* kein Cache vorhanden */ }
-  const mark = store.get('syncMark', 0);
-  const full = !docs.size || !mark || sessionStart - store.get('fullSync', 0) > FULL_SYNC_EVERY;
-
-  const publish = () => { S.matchesRaw = [...docs.values()]; S.loaded.matches = true; S.version++; scheduleRender(); };
-  if (docs.size && !full) publish(); // gespeicherten Stand sofort zeigen
+  const markKey = name === 'matches' ? 'syncMark' : 'syncMark:' + name;
+  const fullKey = name === 'matches' ? 'fullSync' : 'fullSync:' + name;
+  const mark = store.get(markKey, 0);
+  const full = !docs.size || !mark || sessionStart - store.get(fullKey, 0) > FULL_SYNC_EVERY;
+  const publish = () => { onData([...docs.values()]); scheduleRender(); };
+  if (docs.size && !full) publish();
 
   const metas = [];
+  const parts = full ? 1 : fields.length;
   const handler = (idx, isFull) => snap => {
     metas[idx] = { cache: snap.metadata.fromCache, pending: snap.metadata.hasPendingWrites };
-    S.meta.matches = { cache: metas.some(m => m && m.cache), pending: metas.some(m => m && m.pending) };
+    if (name === 'matches') S.meta.matches = { cache: metas.some(m => m && m.cache), pending: metas.some(m => m && m.pending) };
     let changed = false;
     if (isFull) {
-      if (snap.docChanges().length || !S.loaded.matches) {
+      if (snap.docChanges().length || !metas.loadedOnce) {
         docs.clear();
         snap.docs.forEach(d => docs.set(d.id, { id: d.id, ...d.data() }));
-        changed = true;
+        changed = true; metas.loadedOnce = true;
       }
     } else {
       snap.docChanges().forEach(ch => {
@@ -1428,21 +1518,19 @@ async function subscribe() {
     }
     if (!snap.metadata.fromCache) {
       S.lastSync = Date.now();
-      if (metas.length === (isFull ? 1 : 2) && metas.every(m => m && !m.cache)) {
-        store.set('syncMark', sessionStart);
-        if (isFull) store.set('fullSync', sessionStart);
+      if (metas.filter(m => m && !m.cache).length === parts) {
+        store.set(markKey, sessionStart);
+        if (isFull) store.set(fullKey, sessionStart);
       }
     }
     onErrorCleared();
-    if (changed || !S.loaded.matches) publish(); else scheduleRender();
+    if (changed || !metas.published) { metas.published = true; publish(); } else scheduleRender();
   };
-
   if (full) {
-    onSnapshot(col, { includeMetadataChanges: true }, handler(0, true), err => handleError(err, 'matches'));
+    onSnapshot(col, { includeMetadataChanges: true }, handler(0, true), err => handleError(err, name));
   } else {
     const since = mark - SYNC_MARGIN;
-    onSnapshot(query(col, where('timestamp', '>=', since)), { includeMetadataChanges: true }, handler(0, false), err => handleError(err, 'matches'));
-    onSnapshot(query(col, where('voidedAt', '>=', since)), { includeMetadataChanges: true }, handler(1, false), err => handleError(err, 'matches'));
+    fields.forEach((f, i) => onSnapshot(query(col, where(f, '>=', since)), { includeMetadataChanges: true }, handler(i, false), err => handleError(err, name)));
   }
 }
 
@@ -1540,6 +1628,7 @@ function buildMatch(blueIds, greenIds, sb, sg, source) {
     greenPositions: mode === '2v2' ? { forward: greenIds[0], defense: greenIds[1] } : null,
     scoreBlue: sb, scoreGreen: sg,
     winner: sb > sg ? 'blue' : 'green',
+    target: S.league.target, winBy: S.league.winBy, cap: S.league.cap,
     source
   };
 }
@@ -1563,6 +1652,53 @@ function chime() {
     });
   } catch { /* Ton ist optional */ }
 }
+
+/* ---------------- Info-Blasen (data-tip) ----------------
+   Maus: beim Drüberfahren. Touch: antippen, woanders tippen schließt.
+   Elemente mit data-tip und ohne eigene Aktion. */
+const tipEl = (() => { const d = document.createElement('div'); d.id = 'tipBubble'; d.setAttribute('role', 'tooltip'); d.hidden = true; document.body.appendChild(d); return d; })();
+let tipFor = null, tipTimer = null, tipShownAt = 0;
+function showTip(el) {
+  const text = el.getAttribute('data-tip');
+  if (!text) return;
+  tipFor = el;
+  tipShownAt = Date.now();
+  // In offenen Dialogen muss die Blase im Dialog hängen, sonst liegt sie dahinter
+  const host = el.closest('dialog[open]') || document.body;
+  if (tipEl.parentNode !== host) host.appendChild(tipEl);
+  tipEl.textContent = text;
+  tipEl.hidden = false;
+  const r = el.getBoundingClientRect(), tw = Math.min(280, window.innerWidth - 24);
+  tipEl.style.maxWidth = tw + 'px';
+  const h = tipEl.offsetHeight, w = tipEl.offsetWidth;
+  let x = r.left + r.width / 2 - w / 2;
+  x = Math.max(12, Math.min(x, window.innerWidth - w - 12));
+  let y = r.top - h - 8;
+  tipEl.classList.toggle('below', y < 60);
+  if (y < 60) y = r.bottom + 8;
+  tipEl.style.left = x + 'px';
+  tipEl.style.top = y + 'px';
+}
+function hideTip() { tipFor = null; tipEl.hidden = true; clearTimeout(tipTimer); }
+document.addEventListener('pointerover', e => {
+  if (e.pointerType !== 'mouse') return;
+  const el = e.target.closest('[data-tip]');
+  if (el === tipFor) return;
+  clearTimeout(tipTimer);
+  if (!el) { hideTip(); return; }
+  tipTimer = setTimeout(() => showTip(el), 220);
+});
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-tip]');
+  if (el && !el.closest('[data-action]')) { e.preventDefault(); tipFor === el ? hideTip() : showTip(el); return; }
+  if (!el) hideTip();
+}, true);
+// Fokus öffnet nur bei Tastaturbedienung (beim Antippen kommt der Fokus vor dem Klick)
+document.addEventListener('focusin', e => { const el = e.target.closest && e.target.closest('[data-tip]'); if (el && el.matches(':focus-visible')) showTip(el); });
+document.addEventListener('focusout', hideTip);
+window.addEventListener('scroll', () => { if (Date.now() - tipShownAt > 400) hideTip(); }, { passive: true });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideTip(); });
+const tipAttr = t => `data-tip="${esc(t)}" tabindex="0"`;
 
 /* ---------------- Toasts & Dialoge ---------------- */
 function toast(msg, type = 'info', opts = {}) {
@@ -1636,6 +1772,7 @@ function renderAll() {
   renderSelects();
   renderScore();
   renderPreview();
+  renderQuickPick();
   renderLastMatch();
   $('#setupBanner').hidden = activePlayers().length >= 2;
   renderTab();
@@ -1714,15 +1851,16 @@ function renderScore() {
     }
     $$('.chip', box).forEach(c => {
       c.setAttribute('aria-pressed', String(Number(c.dataset.v) === S.score[team]));
-      c.classList.toggle('target', Number(c.dataset.v) === S.target);
+      c.classList.toggle('target', Number(c.dataset.v) === S.league.target);
     });
     const other = team === 'blue' ? 'green' : 'blue';
     $(`#score${team === 'blue' ? 'Blue' : 'Green'}`).closest('.score-screen').classList.toggle('lead', S.score[team] > S.score[other]);
   });
-  $$('.winbtn').forEach(b => { b.hidden = !S.target; b.textContent = S.target ? `Sieg ${S.target}` : 'Sieg'; });
+  $$('.winbtn').forEach(b => { b.textContent = `Sieg ${S.league.target}`; });
 }
 
 function renderPreview() {
+  if (S.loaded.players && S.loaded.matches) renderQuickPick();
   const { blue, green } = teamIds();
   const need = S.mode === '2v2' ? 2 : 1;
   const avg = ids => ids.length ? Math.round(ids.reduce((s, id) => s + disp(ratingOf(id)), 0) / ids.length) : null;
@@ -1747,6 +1885,51 @@ function renderPreview() {
   renderPosTips();
   const d = Math.abs(p - 0.5), fav = p > 0.5 ? 'Blau' : 'Grün';
   $('#probHint').textContent = (d < 0.06 ? 'OFFENES DUELL' : d < 0.18 ? `LEICHTER VORTEIL ${fav}` : `FAVORIT ${fav}`).toUpperCase();
+}
+
+/* Regeln als Text, z. B. „bis 5, 2 Tore Abstand, max. 7“ */
+function rulesText(R = S.league) {
+  return `„bis ${R.target}${R.winBy > 1 ? `, ${R.winBy} Tore Abstand` : ''}${R.cap ? `, max. ${R.cap}` : ''}“`;
+}
+
+/* Schnellauswahl: zuletzt aktive Spieler zum Antippen */
+function quickSlots() { return S.mode === '2v2' ? ['b1', 'b2', 'g1', 'g2'] : ['b1', 'g1']; }
+function renderQuickPick() {
+  const box = $('#quickPick');
+  const R = D().full.R, since = Date.now() - 45 * DAY;
+  const list = activePlayers().map(p => ({ p, last: R.get(p.id)?.last || 0 }))
+    .filter(x => x.last >= since).sort((a, b) => b.last - a.last).slice(0, 8)
+    .sort((a, b) => collator.compare(a.p.name, b.p.name));
+  if (list.length < 2) { box.hidden = true; return; }
+  box.hidden = false;
+  const slotOf = id => quickSlots().find(s => S.sel[s] === id);
+  const lbl = { b1: S.mode === '2v2' ? 'Blau vorn' : 'Blau', b2: 'Blau hinten', g1: S.mode === '2v2' ? 'Grün vorn' : 'Grün', g2: 'Grün hinten' };
+  box.innerHTML = `<div class="qp-head"><span class="dlbl">Zuletzt dabei</span>${quickSlots().some(s => S.sel[s]) ? '<button class="linkbtn" data-action="qpClear">Leeren</button>' : ''}</div>
+    <div class="qp-list">${list.map(({ p }) => { const s = slotOf(p.id);
+      return `<button class="qp ${s ? 'on ' + s[0] : ''}" data-action="qp" data-pid="${esc(p.id)}" aria-pressed="${!!s}">${esc(p.name)}${s ? `<small>${lbl[s]}</small>` : ''}</button>`; }).join('')}</div>`;
+}
+function quickPick(pid) {
+  const cur = quickSlots().find(s => S.sel[s] === pid);
+  if (cur) S.sel[cur] = '';
+  else {
+    const free = quickSlots().find(s => !S.sel[s]);
+    if (!free) return toast('Alle Plätze sind belegt. Erst jemanden antippen, um ihn zu entfernen.', 'info');
+    S.sel[free] = pid;
+  }
+  store.set('sel', S.sel); renderSelects(); renderPreview(); renderQuickPick();
+}
+
+/* Rückspiel: gleiche Teams, Seiten getauscht, Positionen bleiben */
+function rematch(mid) {
+  const m = D().all.find(x => x.id === mid);
+  if (!m) return;
+  S.mode = m.mode; store.set('mode', S.mode);
+  S.sel = { b1: m.greenIds[0], b2: m.greenIds[1] || '', g1: m.blueIds[0], g2: m.blueIds[1] || '' };
+  store.set('sel', S.sel);
+  S.score = { blue: 0, green: 0 };
+  renderSelects(); renderScore(); renderPreview(); renderQuickPick();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast('Rückspiel aufgestellt, Seiten getauscht.', 'info');
 }
 
 function renderPosTips() {
@@ -1779,9 +1962,8 @@ async function submitMatch() {
   const { blue: sb, green: sg } = S.score;
   if (sb === sg) return toast('Unentschieden gibt es beim Kicker nicht. Bitte Tore prüfen.', 'error');
 
-  const T = S.target;
-  if (!plausibleScore(sb, sg, T)) {
-    const okOdd = await ask({ title: 'Ergebnis prüfen', msg: `${sb} : ${sg} passt nicht zu „bis ${T}“. Trotzdem werten?`, ok: 'Werten' });
+  if (!plausibleScore(sb, sg, S.league)) {
+    const okOdd = await ask({ title: 'Ergebnis prüfen', msg: `${sb} : ${sg} passt nicht zu ${rulesText()}. Trotzdem werten?`, ok: 'Werten' });
     if (!okOdd) return;
   }
 
@@ -1875,7 +2057,7 @@ function renderLastMatch() {
   }).join('')}</div>`;
   card.innerHTML = `
     <div class="card-head" style="margin-bottom:10px"><div><h3>Zuletzt gewertet</h3><p class="sub">${esc(ago(m.ts))}${m.mode === '2v2' ? ', Doppel' : ', Einzel'}</p></div>
-    ${canUndo(m) ? `<button class="btn sm" data-action="void" data-mid="${esc(m.id)}">${icon('undo')}Rückgängig</button>` : ''}</div>
+    <div class="row">${canUndo(m) ? `<button class="btn sm" data-action="void" data-mid="${esc(m.id)}">${icon('undo')}Rückgängig</button>` : ''}<button class="btn sm" data-action="rematch" data-mid="${esc(m.id)}">${icon('swap')}Rückspiel</button></div></div>
     <div class="lm-body"><div class="lm-teams">
       ${side(m.blueIds, m.winner === 'blue', false)}
       <div class="scorepill">${m.sb} : ${m.sg}</div>
@@ -1955,15 +2137,15 @@ function boardLayout() {
   const cw = W < 330 ? 13 : small ? 14 : 18, gap = 2, gg = small ? 7 : 12;
   const gw = n => n * (cw + gap) - gap;
   const cols = [
-    { k: 'rank', n: 2, label: 'Pl.' },
+    { k: 'rank', n: 2, label: 'Pl.', tip: 'Platz. Einen Platz gibt es ab 5 Spielen.' },
     { k: 'lamp', px: 10, label: '' },
-    { k: 'name', n: 0, label: 'Spieler' },
-    { k: 'rt', n: 4, label: 'Wertung' }
+    { k: 'name', n: 0, label: 'Spieler', tip: 'Schachtitel vor dem Namen: GM ab 1750, IM ab 1675, FM ab 1600, CM ab 1550 Punkten.' },
+    { k: 'rt', n: 4, label: 'Wertung', tip: 'Elo-Skala, Start bei 1500. 200 Punkte Unterschied: Der Stärkere gewinnt etwa 3 von 4 Spielen.' }
   ];
   const extra = [
-    { k: 'quote', n: 3, label: 'Quote %' },
-    { k: 'form', n: 5, label: 'Form' },
-    { k: 'gd', n: 4, label: 'Ø Diff.' }
+    { k: 'quote', n: 3, label: 'Quote %', tip: 'Siegquote in Prozent.' },
+    { k: 'form', n: 5, label: 'Form', tip: 'Die letzten 5 Spiele, neuestes rechts. S = Sieg, N = Niederlage.' },
+    { k: 'gd', n: 4, label: 'Ø Diff.', tip: 'Durchschnittliche Tordifferenz pro Spiel.' }
   ];
   const nameCells = () => {
     const used = cols.reduce((s, c) => s + (c.k === 'name' ? 0 : c.px || gw(c.n)), 0) + (cols.length - 1) * gg;
@@ -2020,7 +2202,7 @@ function renderLeaderboard() {
 
   const body = $('#lbBody');
   const cols = boardLayout();
-  $('#boardHead').innerHTML = cols.map(c => `<span>${esc(c.label)}</span>`).join('');
+  $('#boardHead').innerHTML = cols.map(c => c.tip ? `<span ${tipAttr(c.tip)}>${esc(c.label)}</span>` : `<span>${esc(c.label)}</span>`).join('');
   const shown = [
     ...rows.filter(placed).map((x, i) => ({ ...x, rank: i + 1 })),
     ...rows.filter(x => !placed(x)).map(x => ({ ...x, rank: null }))
@@ -2057,7 +2239,13 @@ function renderLeaderboard() {
       switch (c.k) {
         case 'rank': return flap(key('rank'), rank == null ? '  ' : num(rank, 2), '', idx);
         case 'lamp': return lamp;
-        case 'name': return flap(key('name' + c.n), boardName(p.name, c.n), '', idx);
+        case 'name': {
+          const ct = chessTitle(rating, rank != null);
+          const pre = ct ? ct.abbr + ' ' : '';
+          const txt = pre + boardName(p.name, c.n - pre.length).trimEnd();
+          const full = txt.padEnd(c.n, ' ').slice(0, c.n);
+          return flap(key('name' + c.n), full, '', idx, [...full].map((_, i2) => i2 < 2 && ct ? 'tt' : ''));
+        }
         case 'rt': return flap(key('rt'), num(rating, 4), rank === 1 ? 'hl' : rank == null ? 'prov' : '', idx);
         case 'quote': return flap(key('q'), r.games ? num(Math.round(rate * 100), 3) : '  -', '', idx);
         case 'form': {
@@ -2079,9 +2267,9 @@ function renderLeaderboard() {
 }
 
 /* ---------------- Statistik ---------------- */
-function recCard({ ic, color, title, value, meta, pid }) {
+function recCard({ ic, color, title, value, meta, pid, tip }) {
   return `<div class="rec" style="--c:${color}">
-    <div class="rh">${icon(ic)}${esc(title)}</div>
+    <div class="rh" ${tip ? tipAttr(tip) : ''}>${icon(ic)}${esc(title)}${tip ? '<span class="tipq">?</span>' : ''}</div>
     <div class="rv" ${pid ? `data-action="profile" data-pid="${esc(pid)}" role="button" tabindex="0"` : ''}>${value ? esc(value) : '–'}</div>
     <div class="rm">${esc(meta)}</div>
   </div>`;
@@ -2111,15 +2299,17 @@ function renderInsights() {
   const d = D();
   const valid = d.valid, R = d.full.R, per = d.full.per;
   const total = valid.length;
-  const bw = valid.filter(m => m.winner === 'blue').length, gw = total - bw;
-  const bp = total ? bw / total : 0.5;
+  const sided = valid;
+  const st = sided.length;
+  const bw = sided.filter(m => m.winner === 'blue').length, gw = st - bw;
+  const bp = st ? bw / st : 0.5;
   let verdict = 'Noch zu wenige Spiele für eine Aussage';
-  if (total >= 20) {
-    const z = Math.abs(bw - total / 2) / Math.sqrt(total / 4);
+  if (st >= 20) {
+    const z = Math.abs(bw - st / 2) / Math.sqrt(st / 4);
     verdict = z < 2 ? 'Kein messbarer Seitenvorteil' : `Auffällig: ${bw > gw ? 'Blau' : 'Grün'} gewinnt häufiger`;
   }
   $('#sideBias').innerHTML = `
-    <p class="section-t">Tisch-Fairness: Siege nach Seite</p>
+    <p class="section-t" ${tipAttr('Siege je Tischseite über alle Spiele. Ein deutlicher Unterschied kann auf einen schiefen Tisch hindeuten.')}>Tisch-Fairness: Siege nach Seite<span class="tipq">?</span></p>
     <div class="row" style="justify-content:space-between;font-size:13.5px"><span style="color:#9cc4ff">Blau ${pct(bp)}</span><span style="color:#8ef0c6">Grün ${pct(1 - bp)}</span></div>
     <div class="bar"><div class="b" style="width:${bp * 100}%"></div><div class="g"></div></div>
     <div class="muted small">${verdict}</div>`;
@@ -2130,9 +2320,12 @@ function renderInsights() {
 
   const hot = top(pl, x => x.r.streak);
   const bestEver = top([...d.players.values()].map(p => ({ p, r: R.get(p.id) })).filter(x => x.r), x => x.r.best);
-  const scorers = pl.filter(x => x.r.games >= MINA);
-  const gk = top(scorers, x => x.r.gf / x.r.games);
-  const df = top(scorers, x => -x.r.ga / x.r.games);
+  // Tore nach tatsächlicher Position im Doppel, bereinigt um die Stärke der Gegner
+  const POSMIN = 8;
+  const gk = top(pl.filter(x => x.r.fN >= POSMIN), x => (x.r.fGF - x.r.fGX) / x.r.fN);
+  const df = top(pl.filter(x => x.r.dN >= POSMIN), x => (x.r.dGX - x.r.dGA) / x.r.dN);
+  const sg = top(pl.filter(x => x.r.sN >= POSMIN), x => (x.r.sW - x.r.sE) / x.r.sN);
+  const d1 = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1).replace('.', ',');
   const nerve = top(pl.filter(x => x.r.closeN >= 5), x => x.r.closeW / x.r.closeN + x.r.closeN / 1e4);
   const cs = top(pl.filter(x => x.r.wins >= 5), x => x.r.cs / x.r.wins);
 
@@ -2155,15 +2348,16 @@ function renderInsights() {
   const riv = Object.values(duel).sort((a, b) => b.n - a.n)[0];
 
   const cards = [
-    recCard({ ic: 'flame', color: 'var(--green)', title: 'Heiße Serie', value: hot && hot.r.streak >= 2 ? hot.p.name : '', meta: hot && hot.r.streak >= 2 ? `${hot.r.streak} Siege in Folge, läuft noch` : 'Aktuell keine Serie ab 2 Siegen', pid: hot && hot.r.streak >= 2 ? hot.p.id : null }),
-    recCard({ ic: 'trophy', color: 'var(--cyan)', title: 'Rekordserie', value: bestEver && bestEver.r.best >= 2 ? bestEver.p.name : '', meta: bestEver && bestEver.r.best >= 2 ? `${bestEver.r.best} Siege am Stück` : 'Noch keine Serie', pid: bestEver && bestEver.r.best >= 2 ? bestEver.p.id : null }),
-    recCard({ ic: 'trend', color: 'var(--green)', title: 'Aufsteiger (30 Tage)', value: climber && climber[1] > 0 ? nameOf(climber[0]) : '', meta: climber && climber[1] > 0 ? `${signed(climber[1])} Wertungspunkte` : 'Noch niemand im Plus', pid: climber && climber[1] > 0 ? climber[0] : null }),
-    recCard({ ic: 'bolt', color: 'var(--cyan)', title: 'Tormaschine', value: gk ? gk.p.name : '', meta: gk ? `${(gk.r.gf / gk.r.games).toFixed(1).replace('.', ',')} Tore pro Spiel` : `Ab ${MINA} Spielen`, pid: gk?.p.id }),
-    recCard({ ic: 'shield', color: 'var(--green)', title: 'Abwehrbollwerk', value: df ? df.p.name : '', meta: df ? `nur ${(df.r.ga / df.r.games).toFixed(1).replace('.', ',')} Gegentore pro Spiel` : `Ab ${MINA} Spielen`, pid: df?.p.id }),
-    recCard({ ic: 'shield', color: 'var(--cyan)', title: 'Nervenstark', value: nerve ? nerve.p.name : '', meta: nerve ? `gewinnt ${pct(nerve.r.closeW / nerve.r.closeN)} der knappen Spiele` : 'Ab 5 knappen Spielen', pid: nerve?.p.id }),
-    recCard({ ic: 'target', color: 'var(--green)', title: 'Zu-Null-König', value: cs && cs.r.cs > 0 ? cs.p.name : '', meta: cs && cs.r.cs > 0 ? `${pct(cs.r.cs / cs.r.wins)} der Siege ohne Gegentor` : 'Noch kein Zu-Null-Sieg', pid: cs && cs.r.cs > 0 ? cs.p.id : null }),
-    recCard({ ic: 'spark', color: 'var(--magenta)', title: 'Größte Überraschung', value: upset && upset.pw < 0.45 ? (upset.m.winner === 'blue' ? upset.m.blueIds : upset.m.greenIds).map(nameOf).join(' & ') : '', meta: upset && upset.pw < 0.45 ? `Sieg mit nur ${pctP(upset.pw)} Chance, ${fmtDate(upset.m.ts)}` : 'Bisher gewinnen die Favoriten' }),
-    recCard({ ic: 'sword', color: 'var(--cyan)', title: 'Größte Rivalität', value: riv && riv.n >= 3 ? `${nameOf(riv.x)} gegen ${nameOf(riv.y)}` : '', meta: riv && riv.n >= 3 ? (riv.wx * 2 === riv.n ? 'Völlig ausgeglichen' : `${nameOf(riv.wx * 2 > riv.n ? riv.x : riv.y)} gewinnt ${pct(Math.max(riv.wx, riv.n - riv.wx) / riv.n)}`) : 'Ab 3 Duellen' })
+    recCard({ ic: 'flame', color: 'var(--green)', title: 'Heiße Serie', tip: 'Längste laufende Siegesserie.', value: hot && hot.r.streak >= 2 ? hot.p.name : '', meta: hot && hot.r.streak >= 2 ? `${hot.r.streak} Siege in Folge, läuft noch` : 'Aktuell keine Serie ab 2 Siegen', pid: hot && hot.r.streak >= 2 ? hot.p.id : null }),
+    recCard({ ic: 'trophy', color: 'var(--cyan)', title: 'Rekordserie', tip: 'Längste Siegesserie aller Zeiten.', value: bestEver && bestEver.r.best >= 2 ? bestEver.p.name : '', meta: bestEver && bestEver.r.best >= 2 ? `${bestEver.r.best} Siege am Stück` : 'Noch keine Serie', pid: bestEver && bestEver.r.best >= 2 ? bestEver.p.id : null }),
+    recCard({ ic: 'trend', color: 'var(--green)', title: 'Aufsteiger (30 Tage)', tip: 'Größter Wertungsgewinn in den letzten 30 Tagen.', value: climber && climber[1] > 0 ? nameOf(climber[0]) : '', meta: climber && climber[1] > 0 ? `${signed(climber[1])} Wertungspunkte` : 'Noch niemand im Plus', pid: climber && climber[1] > 0 ? climber[0] : null }),
+    recCard({ ic: 'bolt', color: 'var(--cyan)', title: 'Tormaschine', tip: 'Wer im Sturm mehr Tore holt, als gegen diese Gegner zu erwarten war. Nur Doppel im Sturm, ab 8 Spielen.', value: gk && gk.r.fGF > gk.r.fGX ? gk.p.name : '', meta: gk && gk.r.fGF > gk.r.fGX ? `${d1((gk.r.fGF - gk.r.fGX) / gk.r.fN)} Tore pro Spiel über Erwartung (Ø ${(gk.r.fGF / gk.r.fN).toFixed(1).replace('.', ',')})` : `Ab ${POSMIN} Doppeln im Sturm`, pid: gk && gk.r.fGF > gk.r.fGX ? gk.p.id : null }),
+    recCard({ ic: 'shield', color: 'var(--green)', title: 'Abwehrbollwerk', tip: 'Wer in der Abwehr weniger Gegentore kassiert, als gegen diese Gegner zu erwarten war. Nur Doppel in der Abwehr, ab 8 Spielen.', value: df && df.r.dGX > df.r.dGA ? df.p.name : '', meta: df && df.r.dGX > df.r.dGA ? `${((df.r.dGX - df.r.dGA) / df.r.dN).toFixed(1).replace('.', ',')} Gegentore pro Spiel weniger als erwartet (Ø ${(df.r.dGA / df.r.dN).toFixed(1).replace('.', ',')})` : `Ab ${POSMIN} Doppeln in der Abwehr`, pid: df && df.r.dGX > df.r.dGA ? df.p.id : null }),
+    recCard({ ic: 'target', color: 'var(--cyan)', title: 'Einzel-Ass', tip: 'Wer im Einzel öfter gewinnt, als nach der Wertung zu erwarten war. Ab 8 Einzeln.', value: sg && sg.r.sW > sg.r.sE ? sg.p.name : '', meta: sg && sg.r.sW > sg.r.sE ? `+${Math.round((sg.r.sW - sg.r.sE) / sg.r.sN * 100)} % Siege über Erwartung` : `Ab ${POSMIN} Einzeln`, pid: sg && sg.r.sW > sg.r.sE ? sg.p.id : null }),
+    recCard({ ic: 'shield', color: 'var(--cyan)', title: 'Nervenstark', tip: 'Beste Siegquote in knappen Spielen: ein Tor Unterschied oder Verlängerung. Ab 5 knappen Spielen.', value: nerve ? nerve.p.name : '', meta: nerve ? `gewinnt ${pct(nerve.r.closeW / nerve.r.closeN)} der knappen Spiele` : 'Ab 5 knappen Spielen', pid: nerve?.p.id }),
+    recCard({ ic: 'target', color: 'var(--green)', title: 'Zu-Null-König', tip: 'Höchster Anteil an Siegen ohne Gegentor. Ab 5 Siegen.', value: cs && cs.r.cs > 0 ? cs.p.name : '', meta: cs && cs.r.cs > 0 ? `${pct(cs.r.cs / cs.r.wins)} der Siege ohne Gegentor` : 'Noch kein Zu-Null-Sieg', pid: cs && cs.r.cs > 0 ? cs.p.id : null }),
+    recCard({ ic: 'spark', color: 'var(--magenta)', title: 'Größte Überraschung', tip: 'Der Sieg mit der geringsten Siegchance vor dem Spiel.', value: upset && upset.pw < 0.45 ? (upset.m.winner === 'blue' ? upset.m.blueIds : upset.m.greenIds).map(nameOf).join(' & ') : '', meta: upset && upset.pw < 0.45 ? `Sieg mit nur ${pctP(upset.pw)} Chance, ${fmtDate(upset.m.ts)}` : 'Bisher gewinnen die Favoriten' }),
+    recCard({ ic: 'sword', color: 'var(--cyan)', title: 'Größte Rivalität', tip: 'Die Paarung, die am häufigsten gegeneinander gespielt hat.', value: riv && riv.n >= 3 ? `${nameOf(riv.x)} gegen ${nameOf(riv.y)}` : '', meta: riv && riv.n >= 3 ? (riv.wx * 2 === riv.n ? 'Völlig ausgeglichen' : `${nameOf(riv.wx * 2 > riv.n ? riv.x : riv.y)} gewinnt ${pct(Math.max(riv.wx, riv.n - riv.wx) / riv.n)}`) : 'Ab 3 Duellen' })
   ];
   $('#records').innerHTML = cards.join('');
   renderPositions();
@@ -2214,11 +2408,12 @@ function renderFame() {
     return c ? `<button class="fame-it ${x.live ? 'live' : 'champ'}" data-action="profile" data-pid="${esc(c.id)}">${inner}</button>`
       : `<div class="fame-it ${x.live ? 'live' : ''}" style="cursor:default">${inner}</div>`;
   };
-  const most = Object.entries(f.titles).sort((a, b) => (b[1].seasons - a[1].seasons) || (b[1].months - a[1].months))[0];
+  const most = Object.entries(f.titles).sort((a, b) => (b[1].seasons - a[1].seasons) || (b[1].months - a[1].months) || (b[1].tours - a[1].tours))[0];
   $('#fame').innerHTML = !f.months.length ? '<div class="empty">Sobald Spiele eingetragen sind, erscheint hier der erste Monatssieger.</div>' : `
-    ${most ? `<p class="sub" style="margin:0 0 12px">Meiste Titel: <strong style="color:var(--text)">${esc(nameOf(most[0]))}</strong> mit ${most[1].seasons ? `${most[1].seasons}× Saison und ` : ''}${most[1].months}× Monat.</p>` : ''}
+    ${most ? `<p class="sub" style="margin:0 0 12px">Meiste Titel: <strong style="color:var(--text)">${esc(nameOf(most[0]))}</strong> (${[most[1].seasons ? `${most[1].seasons}× Saison` : '', most[1].months ? `${most[1].months}× Monat` : '', most[1].tours ? `${most[1].tours}× Turnier` : ''].filter(Boolean).join(', ')}).</p>` : ''}
     <div class="fame">
-      <div><p class="section-t">Saisons</p><div class="fame-list">${f.seasons.map(item).join('')}</div></div>
+      <div><p class="section-t">Saisons</p><div class="fame-list">${f.seasons.map(item).join('')}</div>
+        ${f.tours.length ? `<p class="section-t" style="margin-top:14px">Turniere</p><div class="fame-list">${f.tours.slice(0, 10).map(t => `<button class="fame-it champ" data-action="profile" data-pid="${esc(t.winners[0])}"><span class="per">${esc(fmtDate(t.endedAt || t.createdAt).slice(0, 6))}</span><span class="who">${t.winners.map(id => esc(nameOf(id))).join(' & ')}</span><span class="val">DYP</span></button>`).join('')}</div>` : ''}</div>
       <div><p class="section-t">Monate</p><div class="fame-list">${f.months.slice(0, 12).map(item).join('')}</div></div>
     </div>`;
 }
@@ -2356,110 +2551,197 @@ function histItem(m) {
   </div>`;
 }
 
-/* ---------------- DYP-Turnier ---------------- */
-function dypPresent() {
-  const ok = new Set(activePlayers().map(p => p.id));
-  return S.dyp.present.filter(id => ok.has(id));
+/* ---------------- DYP-Turniere ----------------
+   Turniere liegen in der Datenbank (Sammlung "tournaments"), alle sehen live dasselbe.
+   Alles, was gleichzeitig passieren könnte (auslosen, werten, beenden), läuft als
+   Transaktion: Tippen zwei Leute gleichzeitig, wird trotzdem nur einmal gelost. */
+const openTours = () => S.toursRaw.filter(t => t.status === 'open').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+function curTour() {
+  const list = openTours();
+  return list.find(t => t.id === S.tourSel) || (list.length === 1 ? list[0] : null);
 }
+const tourLabel = t => `${fmtDay(t.createdAt)}, ${fmtTime(t.createdAt)} Uhr`;
+const tourPresent = t => { const ok = new Set(activePlayers().map(p => p.id)); return (t.present || []).filter(id => ok.has(id)); };
+const tourResults = t => { const known = new Map(D().all.map(m => [m.id, m])); return (t.results || []).filter(r => { const m = known.get(r.matchId); return !m || !m.voided; }); };
+const scoreKey = (t, i) => `${t.id}|${t.round}|${i}`;
+const fxScore = (t, i) => S.tourScores[scoreKey(t, i)] || (S.tourScores[scoreKey(t, i)] = { sb: 0, sg: 0 });
+
+async function tourTx(tid, fn) {
+  if (!requireDb()) return null;
+  if (!navigator.onLine) { toast('Für Turniere wird eine Internetverbindung gebraucht.', 'error'); return null; }
+  const { runTransaction, doc } = S.fs;
+  try {
+    return await runTransaction(S.db, async tx => {
+      const ref = doc(S.db, 'tournaments', tid);
+      const snap = await tx.get(ref);
+      if (!snap.exists()) throw new Error('Turnier nicht gefunden.');
+      const out = fn({ id: tid, ...snap.data() }, tx);
+      if (!out) return null;
+      tx.update(ref, { ...out.patch, updatedAt: Date.now() });
+      return out.result ?? true;
+    });
+  } catch (err) {
+    toast(err && err.userMsg ? err.userMsg : `Das hat nicht geklappt: ${errMsg(err)}`, 'error');
+    return null;
+  }
+}
+const userErr = msg => Object.assign(new Error(msg), { userMsg: msg });
 
 function renderDyp() {
-  const players = activePlayers().sort((a, b) => collator.compare(a.name, b.name));
-  const present = new Set(dypPresent());
-  $('#dypCount').textContent = `Anwesend: ${present.size}`;
-  const ses = $('#dypSession');
-  if (S.dyp.round > 0) {
-    ses.hidden = false;
-    ses.innerHTML = `${icon('info')}<div class="grow">Turnier läuft seit ${fmtDay(S.dyp.startedAt) === 'Heute' ? 'heute' : fmtDay(S.dyp.startedAt)}, ${fmtTime(S.dyp.startedAt)} Uhr, Runde ${S.dyp.round}.<p>Geht über mehrere Pausen weiter. Gespeichert auf diesem Gerät.</p></div>`;
-  } else ses.hidden = true;
-  $('#dypPlayers').innerHTML = players.length
-    ? players.map(p => `<button class="pchip" data-action="dypToggle" data-pid="${esc(p.id)}" aria-pressed="${present.has(p.id)}">${present.has(p.id) ? icon('check') : ''}${esc(p.name)}</button>`).join('')
-    : `<span class="muted small">Noch keine Spieler angelegt.</span>`;
-  $$('[data-action="dypMode"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.dyp.mode)));
+  const list = openTours(), t = curTour();
+  $('#tourList').innerHTML = list.length ? list.map(x => `
+      <button class="tour-it ${t && t.id === x.id ? 'on' : ''}" data-action="tourOpen" data-tid="${esc(x.id)}">
+        <span><strong>${esc(tourLabel(x))}</strong><br><span class="muted small">${x.round ? `Runde ${x.round}` : 'noch nicht ausgelost'}, ${tourPresent(x).length} dabei</span></span>
+        <span class="muted small">${esc(ago(x.updatedAt || x.createdAt))}</span>
+      </button>`).join('')
+    : '<div class="empty" style="padding:14px">Gerade läuft kein Turnier.</div>';
 
-  const box = $('#dypRound');
-  const fx = S.dyp.fixtures;
-  let html = '';
+  const box = $('#tourView');
+  if (!t) { box.innerHTML = ''; return; }
+  const present = new Set(tourPresent(t));
+  const players = activePlayers().sort((a, b) => collator.compare(a.name, b.name));
+  const fx = t.fixtures || [];
+  const anyDone = fx.some(f => f.done), allDone = fx.length && fx.every(f => f.done);
+  const resting = (t.resting || []).filter(id => D().players.has(id));
+  let html = `<div class="card">
+    <div class="card-head"><div><h2>Turnier ${esc(tourLabel(t))}</h2><p class="sub">${t.round ? `Runde ${t.round}.` : 'Anwesende markieren, dann auslosen.'} Alle sehen live dasselbe.</p></div>
+      <button class="btn sm ghost" data-action="tourEnd">${icon('trophy')}Beenden</button></div>
+    <div class="row" style="justify-content:space-between;margin-bottom:8px"><span class="section-t" style="margin:0">Dabei: ${present.size}</span>
+      <span class="row"><button class="linkbtn" data-action="tourAll" data-v="1">Alle</button><span class="dim">|</span><button class="linkbtn" data-action="tourAll" data-v="0">Keiner</button></span></div>
+    <div class="plist">${players.map(p => `<button class="pchip" data-action="tourToggle" data-pid="${esc(p.id)}" aria-pressed="${present.has(p.id)}">${present.has(p.id) ? icon('check') : ''}${esc(p.name)}</button>`).join('')}</div>
+    <div class="row wrap-ok" style="margin-top:14px;justify-content:space-between">
+      <div class="seg" role="group" aria-label="Auslosung">
+        <button data-action="tourMode" data-v="fair" aria-pressed="${t.mode !== 'random'}" ${tipAttr('Teams so losen, dass die Spiele möglichst knapp werden.')}>Ausgeglichen</button>
+        <button data-action="tourMode" data-v="random" aria-pressed="${t.mode === 'random'}">Reiner Zufall</button>
+      </div>
+      <div class="row">
+        ${fx.length && !anyDone ? `<button class="btn sm" data-action="tourRedraw">${icon('restore')}Neu auslosen</button>` : ''}
+        <button class="btn primary" data-action="tourDraw">${icon('dice')}${t.round && !allDone ? 'Nächste Runde' : t.round ? 'Nächste Runde' : 'Runde auslosen'}</button>
+      </div>
+    </div></div>`;
   if (fx.length) {
-    const resting = S.dyp.resting.filter(id => D().players.has(id));
-    if (resting.length) html += `<div class="banner info">${icon('coffee')}<div class="grow"><strong>Pause in Runde ${S.dyp.round}:</strong> ${resting.map(id => esc(nameOf(id))).join(', ')}</div></div>`;
+    if (resting.length) html += `<div class="banner info">${icon('coffee')}<div class="grow"><strong>Pause in Runde ${t.round}:</strong> ${resting.map(id => esc(nameOf(id))).join(', ')}</div></div>`;
     html += fx.map((f, i) => {
-      const team = (cls, ids, key) => `<div class="fx-team ${cls}">
+      const sc = f.done ? { sb: f.sb, sg: f.sg } : fxScore(t, i);
+      const team = (cls, ids, k) => `<div class="fx-team ${cls}">
         <div class="pos"><span>Sturm</span>${esc(nameOf(ids[0]))}</div>
         <div class="pos"><span>Abwehr</span>${esc(nameOf(ids[1]))}</div>
         <div class="score-row"><span class="lbl">Tore</span><div class="stepper">
-          <button class="step" ${f.done ? 'disabled' : ''} data-action="dypScore" data-fx="${i}" data-k="${key}" data-d="-1" aria-label="Tor abziehen">−</button>
-          <output class="score">${f[key]}</output>
-          <button class="step" ${f.done ? 'disabled' : ''} data-action="dypScore" data-fx="${i}" data-k="${key}" data-d="1" aria-label="Tor hinzufügen">+</button>
-        </div></div></div>`;
+          <button class="step" ${f.done ? 'disabled' : ''} data-action="tourScore" data-fx="${i}" data-k="${k}" data-d="-1" aria-label="Tor abziehen">−</button>
+          <output class="score">${sc[k]}</output>
+          <button class="step" ${f.done ? 'disabled' : ''} data-action="tourScore" data-fx="${i}" data-k="${k}" data-d="1" aria-label="Tor hinzufügen">+</button>
+        </div></div>
+        ${f.done ? '' : `<button class="winbtn" data-action="tourWin" data-fx="${i}" data-k="${k}">Sieg ${S.league.target}</button>`}</div>`;
       const pb = winProb(f.blue.map(ratingOf), f.green.map(ratingOf));
       return `<div class="card fixture ${f.done ? 'done' : ''}">
-        <div class="row" style="justify-content:space-between"><h3>Runde ${S.dyp.round}, Spiel ${i + 1}</h3>
+        <div class="row" style="justify-content:space-between"><h3>Runde ${t.round}, Spiel ${i + 1}</h3>
           <span class="tag ${f.done ? '' : 'dyp'}">${f.done ? 'gewertet' : `Prognose ${pctP(pb)} : ${pctP(1 - pb)}`}</span></div>
         <div class="fx-teams">${team('blue', f.blue, 'sb')}${team('green', f.green, 'sg')}</div>
-        ${f.done ? '' : `<button class="btn primary block" data-action="dypSubmit" data-fx="${i}">${icon('check')}Ergebnis werten</button>`}
+        ${f.done ? '' : `<button class="btn primary block" data-action="tourSubmit" data-fx="${i}">${icon('check')}Ergebnis werten</button>`}
       </div>`;
     }).join('');
-  } else {
-    html = `<div class="card empty">Anwesende markieren und „Runde auslosen“ tippen.</div>`;
+  }
+  const rows = tourTable(tourResults(t));
+  if (rows.length) {
+    html += `<div class="card"><div class="card-head"><div><h3>Turnier-Tabelle</h3><p class="sub">Nach Siegen, dann Tordifferenz.</p></div></div>
+      <div class="tbl-wrap"><table><thead><tr><th class="ctr">#</th><th>Spieler</th><th class="ctr">Spiele</th><th class="ctr">Siege</th><th class="num">Tordiff.</th></tr></thead><tbody>
+      ${rows.map((e, i) => `<tr class="clickable" data-action="profile" data-pid="${esc(e.id)}"><td class="rank ${i === 0 ? 'top' : ''}">${i + 1}</td><td style="font-weight:600">${esc(nameOf(e.id))}</td>
+        <td class="ctr mono">${e.n}</td><td class="ctr mono" style="color:var(--green)">${e.w}</td><td class="num" style="color:${e.gd >= 0 ? 'var(--green)' : 'var(--red)'}">${signed(e.gd)}</td></tr>`).join('')}
+      </tbody></table></div></div>`;
   }
   box.innerHTML = html;
-
-  // Turnier-Tabelle (annullierte Spiele fliegen automatisch raus)
-  const known = new Map(D().all.map(m => [m.id, m]));
-  const res = S.dyp.results.filter(r => { const m = known.get(r.matchId); return !m || !m.voided; });
-  const card = $('#dypTableCard');
-  if (!res.length) { card.hidden = true; return; }
-  card.hidden = false;
-  const t = {};
-  res.forEach(r => {
-    const add = (ids, gf, ga) => ids.forEach(id => { const e = t[id] || (t[id] = { id, n: 0, w: 0, gd: 0 }); e.n++; if (gf > ga) e.w++; e.gd += gf - ga; });
-    add(r.blue, r.sb, r.sg); add(r.green, r.sg, r.sb);
-  });
-  const rows = Object.values(t).sort((a, b) => b.w - a.w || b.gd - a.gd || a.n - b.n);
-  $('#dypTableSub').textContent = 'Nach Siegen, dann Tordifferenz.';
-  $('#dypTableBody').innerHTML = rows.map((e, i) => `<tr class="clickable" data-action="profile" data-pid="${esc(e.id)}">
-    <td class="rank ${i === 0 ? 'top' : ''}">${i + 1}</td><td style="font-weight:600">${esc(nameOf(e.id))}</td>
-    <td class="ctr mono">${e.n}</td><td class="ctr mono" style="color:var(--green)">${e.w}</td>
-    <td class="num" style="color:${e.gd >= 0 ? 'var(--green)' : 'var(--red)'}">${signed(e.gd)}</td></tr>`).join('');
 }
 
-async function dypDraw() {
-  const ids = dypPresent();
-  if (ids.length < 4) return toast('Mindestens vier Anwesende auswählen.', 'error');
-  if (S.dyp.fixtures.some(f => !f.done)) {
-    const ok = await ask({ title: 'Neue Runde auslosen?', msg: 'In der aktuellen Runde sind noch Spiele offen. Diese Ergebnisse gehen verloren.', ok: 'Trotzdem auslosen', danger: true });
+async function tourNew() {
+  if (!requireDb()) return;
+  const recent = openTours().find(t => Date.now() - (t.updatedAt || t.createdAt) < 3 * 3600e3);
+  if (recent) {
+    const ok = await ask({ title: 'Schon ein Turnier offen', msg: `Das Turnier von ${tourLabel(recent)} läuft noch. Trotzdem ein weiteres starten?`, ok: 'Neues starten', cancel: 'Zum laufenden' });
+    if (!ok) { S.tourSel = recent.id; store.set('tourSel', S.tourSel); renderDyp(); return; }
+  }
+  const { doc, collection, setDoc } = S.fs;
+  const ref = doc(collection(S.db, 'tournaments'));
+  const now = Date.now();
+  setDoc(ref, { status: 'open', createdAt: now, updatedAt: now, createdBy: deviceId, present: [], mode: 'fair', round: 0, fixtures: [], resting: [], played: {}, rest: {}, pair: {}, opp: {}, prev: null, results: [], winners: [] })
+    .catch(err => toast(`Turnier konnte nicht angelegt werden: ${errMsg(err)}`, 'error'));
+  S.tourSel = ref.id; store.set('tourSel', S.tourSel);
+}
+
+function drawPatch(t, base, fair) {
+  const ids = tourPresent(t);
+  if (ids.length < 4) throw userErr('Mindestens vier Anwesende auswählen.');
+  const plan = planRound(ids, base, fair, ratingOf);
+  plan.fixtures.forEach(f => ['blue', 'green'].forEach(k => { if (swapGain(ratingOf(f[k][0]), ratingOf(f[k][1])) > 0) f[k] = [f[k][1], f[k][0]]; }));
+  return { fixtures: plan.fixtures, resting: plan.resting, rest: plan.rest, pair: plan.pair, opp: plan.opp, played: plan.played };
+}
+async function tourDraw() {
+  const t = curTour(); if (!t) return;
+  if ((t.fixtures || []).some(f => !f.done)) {
+    const ok = await ask({ title: 'Nächste Runde auslosen?', msg: 'In der aktuellen Runde sind noch Spiele offen. Diese werden nicht gewertet.', ok: 'Trotzdem auslosen', danger: true });
     if (!ok) return;
   }
-  if (S.dyp.round > 0 && Date.now() - (S.dyp.lastDraw || 0) > 8 * 3600e3) {
-    const restart = await ask({ title: 'Neues Turnier?', msg: `Das Turnier vom ${fmtDate(S.dyp.startedAt)} läuft noch (${S.dyp.round} ${S.dyp.round === 1 ? 'Runde' : 'Runden'}).`, ok: 'Neu starten', cancel: 'Weiterspielen' });
-    if (restart) S.dyp = { present: S.dyp.present, mode: S.dyp.mode, round: 0, fixtures: [], resting: [], rest: {}, pair: {}, opp: {}, results: [], startedAt: 0 };
-  }
-  const plan = planRound(ids, S.dyp, S.dyp.mode === 'fair', ratingOf);
-  // Innerhalb jedes Teams: wer im Sturm besser ist, spielt vorne
-  plan.fixtures.forEach(f => ['blue', 'green'].forEach(t => { if (swapGain(ratingOf(f[t][0]), ratingOf(f[t][1])) > 0) f[t] = [f[t][1], f[t][0]]; }));
-  const tables = plan.fixtures.length;
-  Object.assign(S.dyp, { fixtures: plan.fixtures, resting: plan.resting, rest: plan.rest, pair: plan.pair, opp: plan.opp });
-  S.dyp.round++;
-  S.dyp.startedAt = S.dyp.startedAt || Date.now();
-  S.dyp.lastDraw = Date.now();
-  saveDyp();
-  renderDyp();
-  toast(`Runde ${S.dyp.round}: ${tables} ${tables === 1 ? 'Spiel' : 'Spiele'} ausgelost.`, 'success');
+  const round = t.round;
+  const res = await tourTx(t.id, x => {
+    if (x.round !== round) throw userErr('Inzwischen hat schon jemand anderes ausgelost.');
+    const prev = { rest: x.rest || {}, pair: x.pair || {}, opp: x.opp || {}, played: x.played || {}, resting: x.resting || [] };
+    return { patch: { ...drawPatch(x, prev, x.mode !== 'random'), round: x.round + 1, prev } };
+  });
+  if (res) toast(`Runde ${round + 1} ausgelost.`, 'success');
 }
-
-function dypSubmit(i) {
-  const f = S.dyp.fixtures[i];
-  if (!f || f.done || !requireDb()) return;
-  if (f.sb === f.sg) return toast('Unentschieden gibt es beim Kicker nicht.', 'error');
-  const all = [...f.blue, ...f.green];
-  if (all.some(id => !activePlayers().some(p => p.id === id))) return toast('Ein Spieler dieser Paarung existiert nicht mehr. Bitte neu auslosen.', 'error');
-  const id = writeMatch(buildMatch(f.blue, f.green, f.sb, f.sg, 'dyp'));
-  f.done = true; f.matchId = id;
-  S.dyp.results.push({ matchId: id, blue: f.blue, green: f.green, sb: f.sb, sg: f.sg, ts: Date.now() });
-  saveDyp();
+async function tourRedraw() {
+  const t = curTour(); if (!t) return;
+  const round = t.round;
+  const res = await tourTx(t.id, x => {
+    if (x.round !== round) throw userErr('Inzwischen hat schon jemand anderes ausgelost.');
+    if ((x.fixtures || []).some(f => f.done)) throw userErr('In dieser Runde ist schon ein Spiel gewertet.');
+    if (!x.prev) throw userErr('Diese Runde lässt sich nicht neu auslosen.');
+    return { patch: drawPatch(x, x.prev, x.mode !== 'random') };
+  });
+  if (res) toast(`Runde ${round} neu ausgelost.`, 'success');
+}
+async function tourSubmit(i) {
+  const t = curTour(); if (!t) return;
+  const f = (t.fixtures || [])[i]; if (!f || f.done) return;
+  const { sb, sg } = fxScore(t, i);
+  if (sb === sg) return toast('Unentschieden gibt es beim Kicker nicht.', 'error');
+  if (!plausibleScore(sb, sg, S.league)) {
+    const okOdd = await ask({ title: 'Ergebnis prüfen', msg: `${sb} : ${sg} passt nicht zu ${rulesText()}. Trotzdem werten?`, ok: 'Werten' });
+    if (!okOdd) return;
+  }
+  const round = t.round;
+  const { doc, collection, serverTimestamp } = S.fs;
+  const mref = doc(collection(S.db, 'matches'));
+  const res = await tourTx(t.id, (x, tx) => {
+    const fx = (x.fixtures || []).map(z => ({ ...z }));
+    if (x.round !== round || !fx[i] || fx[i].done) throw userErr('Dieses Spiel wurde schon gewertet oder neu ausgelost.');
+    const m = { ...buildMatch(fx[i].blue, fx[i].green, sb, sg, 'dyp'), tournamentId: x.id, deviceId, voided: false, schema: 2, createdAt: serverTimestamp() };
+    tx.set(mref, m);
+    fx[i] = { ...fx[i], done: true, matchId: mref.id, sb, sg };
+    return { patch: { fixtures: fx, results: [...(x.results || []), { matchId: mref.id, blue: fx[i].blue, green: fx[i].green, sb, sg }] } };
+  });
+  if (!res) return;
+  S.pendingHi = mref.id;
   chime();
-  renderDyp();
-  toast(`Gewertet: ${f.sb} : ${f.sg}.`, 'success', { action: { label: 'Rückgängig', run: () => { setVoided(id, true); f.done = false; f.matchId = null; S.dyp.results = S.dyp.results.filter(r => r.matchId !== id); saveDyp(); renderDyp(); } } });
+  toast(`Gewertet: ${sb} : ${sg}.`, 'success', { action: { label: 'Rückgängig', run: () => tourUndo(t.id, mref.id) } });
+}
+async function tourUndo(tid, matchId) {
+  setVoided(matchId, true);
+  await tourTx(tid, x => {
+    const fx = (x.fixtures || []).map(f => f.matchId === matchId ? { ...f, done: false, matchId: null } : f);
+    return { patch: { fixtures: fx, results: (x.results || []).filter(r => r.matchId !== matchId) } };
+  });
+  toast('Spiel annulliert.', 'info');
+}
+async function tourEnd() {
+  const t = curTour(); if (!t) return;
+  const rows = tourTable(tourResults(t)), win = tourWinners(rows);
+  const ok = await ask({ title: 'Turnier beenden?', msg: win.length ? `Sieger: ${win.map(nameOf).join(' & ')}. Die Spiele bleiben in der Liga.` : 'Noch ohne gewertetes Spiel. Es wird einfach geschlossen.', ok: 'Beenden' });
+  if (!ok) return;
+  const res = await tourTx(t.id, x => {
+    const w = tourWinners(tourTable(tourResults(x)));
+    return { patch: { status: 'done', endedAt: Date.now(), winners: w }, result: w };
+  });
+  if (res) { if (res.length) chime(); toast(res.length ? `Turnier beendet. Sieg für ${res.map(nameOf).join(' & ')}!` : 'Turnier beendet.', 'success'); }
 }
 
 /* ---------------- Spielerprofil ---------------- */
@@ -2504,6 +2786,7 @@ function renderProfile(pid) {
   $('#profHead').innerHTML = `${avatar(p.name, 'lg')}<div style="min-width:0">
     <h3 style="font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</h3>
     <div class="row wrap-ok" style="gap:6px;margin-top:4px;font-size:13px">
+      ${(() => { const ct = chessTitle(rating, r.games >= CFG.placement && !p.archived); return ct ? `<span class="tier t3" ${tipAttr(`${ct.name}: ab ${ct.min} Punkten. Darüber: ${CHESS.filter(x => x.min > ct.min).map(x => `${x.abbr} ab ${x.min}`).join(', ') || 'nichts, höchster Titel'}.`)}>${ct.abbr} ${ct.name}</span>` : ''; })()}
       ${p.archived ? '<span class="tag void">archiviert</span>' : r.games < CFG.placement ? `<span class="mono muted">In Einstufung, ${r.games} von ${CFG.placement} Spielen</span>` : `<span class="mono muted">Rang ${rank} von ${list.length}</span>`}
       <span class="mono" style="color:var(--cyan)">${rating} Punkte</span><span class="dim mono" title="Unsicherheit der Schätzung">±${Math.round(40 * r.sigma)}</span>
     </div></div>`;
@@ -2529,7 +2812,7 @@ function renderProfile(pid) {
       <div class="kpi"><div class="v" style="color:var(--red)">${r.games ? (r.ga / r.games).toFixed(1).replace('.', ',') : '–'}</div><div class="k">Gegentore</div></div>
       <div class="kpi"><div class="v">${r.best}</div><div class="k">Beste Serie</div></div>
     </div>
-    ${(() => { const t = hallOfFame().titles[pid]; return t ? `<div class="banner info" style="padding:10px 13px">${icon('laurel')}<div class="grow">${[t.seasons ? `${t.seasons}× Saisonsieger` : '', t.months ? `${t.months}× Monatssieger` : ''].filter(Boolean).join(', ')}</div></div>` : ''; })()}
+    ${(() => { const t = hallOfFame().titles[pid]; return t ? `<div class="banner info" style="padding:10px 13px">${icon('laurel')}<div class="grow">${[t.seasons ? `${t.seasons}× Saisonsieger` : '', t.months ? `${t.months}× Monatssieger` : '', t.tours ? `${t.tours}× Turniersieger` : ''].filter(Boolean).join(', ')}</div></div>` : ''; })()}
     <div><p class="section-t">Wertungsverlauf</p>${altitudeChart(r.hist)}</div>
     <div class="row" style="justify-content:space-between"><span class="section-t" style="margin:0">Letzte ${Math.min(10, r.form.length) || ''} Spiele</span>
       <span class="form" style="gap:4px">${r.form.map(w => `<i class="${w ? 'w' : 'l'}" style="width:14px;height:14px;border-radius:4px"></i>`).join('') || '<span class="muted small">noch keine</span>'}</span></div>
@@ -2545,7 +2828,7 @@ function renderProfile(pid) {
       <p class="sub" style="margin:8px 0 0;font-size:12px">+/− = über oder unter der Erwartung</p>
     </div></div>
     <div><p class="section-t">Abzeichen: ${bl.filter(x => x.got).length} von ${bl.length}</p>
-      <div class="badges">${bl.map(x => `<button class="bdg ${x.got ? '' : 'off'}" data-action="badge" data-desc="${esc(`${x.name}: ${x.desc}${x.got ? ' (geschafft)' : ''}`)}">${icon(x.got ? 'laurel' : 'lock')}${esc(x.name)}</button>`).join('')}</div></div>
+      <div class="badges">${bl.map(x => `<span class="bdg ${x.got ? '' : 'off'}" ${tipAttr(`${x.desc}${x.got ? ' – geschafft!' : ''}`)}>${icon(x.got ? 'laurel' : 'lock')}${esc(x.name)}</span>`).join('')}</div></div>
     ${recent.length ? `<div><p class="section-t">Letzte Spiele</p><div class="hist">${recent.map(histItem).join('')}</div></div>` : ''}
     <div class="row wrap-ok" style="border-top:1px dashed var(--line-soft);padding-top:12px">
       <button class="btn sm" data-action="compareWith" data-pid="${esc(pid)}">${icon('compare')}Mit jemandem vergleichen</button>
@@ -2658,7 +2941,7 @@ function plain(v) {
   return v;
 }
 function exportJson() {
-  const data = { app: 'ifl-kicker', version: CFG.appVersion, exportedAt: new Date().toISOString(), players: plain(S.playersRaw), matches: plain(S.matchesRaw) };
+  const data = { app: 'ifl-kicker', version: CFG.appVersion, exportedAt: new Date().toISOString(), players: plain(S.playersRaw), matches: plain(S.matchesRaw), tournaments: plain(S.toursRaw), league: S.league };
   download(`ifl-kicker-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2), 'application/json');
   store.set('lastBackup', Date.now());
   toast('Backup heruntergeladen.', 'success');
@@ -2672,7 +2955,7 @@ function pickBackupFile() {
   inp.onchange = () => { const f = inp.files && inp.files[0]; if (f) f.text().then(restoreBackup).catch(() => toast('Datei konnte nicht gelesen werden.', 'error')); };
   inp.click();
 }
-function planRestore(data, existingPlayers, existingMatches) {
+function planRestore(data, existingPlayers, existingMatches, existingTours = []) {
   if (!data || !Array.isArray(data.players) || !Array.isArray(data.matches)) return { error: 'Das ist keine gültige Backup-Datei.' };
   const havePlayers = new Set(existingPlayers.map(p => p.id)), haveMatches = new Set(existingMatches.map(m => m.id));
   const players = [], matches = []; let invalid = 0;
@@ -2693,21 +2976,26 @@ function planRestore(data, existingPlayers, existingMatches) {
       voidedAt: Date.now() // markiert die Änderung, damit andere Geräte sie beim nächsten Abgleich holen
     } });
   });
-  return { players, matches, invalid };
+  const haveTours = new Set((existingTours || []).map(t => t.id));
+  const tours = (Array.isArray(data.tournaments) ? data.tournaments : [])
+    .filter(t => t && typeof t.id === 'string' && !haveTours.has(t.id) && (t.status === 'open' || t.status === 'done'))
+    .map(t => { const { id, ...rest } = t; return { id, data: { ...rest, createdAt: Math.round(Number(rest.createdAt) || Date.now()), updatedAt: Date.now() } }; });
+  return { players, matches, tours, invalid };
 }
 async function restoreBackup(text) {
   if (!requireDb()) return;
   let data;
   try { data = JSON.parse(text); } catch { return toast('Die Datei ist kein gültiges JSON.', 'error'); }
-  const plan = planRestore(data, S.playersRaw, S.matchesRaw);
+  const plan = planRestore(data, S.playersRaw, S.matchesRaw, S.toursRaw);
   if (plan.error) return toast(plan.error, 'error');
-  if (!plan.players.length && !plan.matches.length) return toast(`Nichts zu tun: Alles aus dem Backup ist bereits vorhanden${plan.invalid ? ` (${plan.invalid} ungültige Einträge übersprungen)` : ''}.`, 'info');
-  const ok = await ask({ title: 'Backup einspielen?', msg: `${plan.players.length} Spieler und ${plan.matches.length} Spiele fehlen in der Datenbank und werden wiederhergestellt. Vorhandene Daten werden nicht verändert.${plan.invalid ? ` ${plan.invalid} ungültige Einträge werden übersprungen.` : ''}`, ok: 'Einspielen' });
+  if (!plan.players.length && !plan.matches.length && !plan.tours.length) return toast(`Nichts zu tun: Alles aus dem Backup ist bereits vorhanden${plan.invalid ? ` (${plan.invalid} ungültige Einträge übersprungen)` : ''}.`, 'info');
+  const ok = await ask({ title: 'Backup einspielen?', msg: `${plan.players.length} Spieler, ${plan.matches.length} Spiele und ${plan.tours.length} Turniere fehlen in der Datenbank und werden wiederhergestellt. Vorhandene Daten werden nicht verändert.${plan.invalid ? ` ${plan.invalid} ungültige Einträge werden übersprungen.` : ''}`, ok: 'Einspielen' });
   if (!ok) return;
   const { writeBatch, doc, serverTimestamp } = S.fs;
   const ops = [
     ...plan.players.map(p => b => b.set(doc(S.db, 'players', p.id), p.data)),
-    ...plan.matches.map(m => b => b.set(doc(S.db, 'matches', m.id), { ...m.data, createdAt: serverTimestamp() }))
+    ...plan.matches.map(m => b => b.set(doc(S.db, 'matches', m.id), { ...m.data, createdAt: serverTimestamp() })),
+    ...plan.tours.map(t => b => b.set(doc(S.db, 'tournaments', t.id), t.data))
   ];
   const voidOps = plan.matches.filter(m => m.voided).map(m => b => b.update(doc(S.db, 'matches', m.id), { voided: true, voidedAt: Date.now(), voidedBy: deviceId }));
   try {
@@ -2745,9 +3033,13 @@ function renderSettings() {
       <div class="kv"><span class="muted">Firebase-Projekt</span><span class="mono">${esc(FIREBASE_CONFIG.projectId)}</span></div>
     </div>
     <div>
-      <p class="section-t">Gespielt wird bis</p>
-      <div class="seg" role="group" aria-label="Siegtore">${[5, 6, 7, 10, 0].map(v => `<button data-action="target" data-v="${v}" aria-pressed="${S.target === v}">${v || 'offen'}</button>`).join('')}</div>
-      <p class="sub" style="margin:8px 0 0">Für den „Sieg“-Knopf und die Ergebnisprüfung auf diesem Gerät.</p>
+      <p class="section-t">Spielregeln der Liga</p>
+      <p style="margin:0 0 8px">Bis ${S.league.target}${S.league.winBy > 1 ? `, ${S.league.winBy} Tore Abstand` : ''}${S.league.cap ? `, höchstens bis ${S.league.cap}` : ''}.</p>
+      ${S.isAdmin ? `<div class="row wrap-ok" style="gap:8px">
+        <div class="seg" role="group" aria-label="Siegtore">${[5, 6, 7, 10].map(v => `<button data-action="league" data-k="target" data-v="${v}" aria-pressed="${S.league.target === v}">bis ${v}</button>`).join('')}</div>
+        <div class="seg" role="group" aria-label="Abstand">${[1, 2].map(v => `<button data-action="league" data-k="winBy" data-v="${v}" aria-pressed="${S.league.winBy === v}">${v === 1 ? 'ohne Abstand' : '2 Abstand'}</button>`).join('')}</div>
+        <div class="seg" role="group" aria-label="Höchstens">${[0, 7, 8].map(v => `<button data-action="league" data-k="cap" data-v="${v}" aria-pressed="${S.league.cap === v}">${v ? 'max. ' + v : 'offen'}</button>`).join('')}</div>
+      </div><p class="sub" style="margin:6px 0 0">Gilt sofort für alle Geräte.</p>` : ''}
     </div>
     <button class="btn sm" data-action="openQr" style="justify-self:start">${icon('qr')}QR-Code für den Tisch drucken</button>
     <label class="switch"><span>Signalton nach jedem Spiel<br><span class="muted small">Nur auf diesem Gerät</span></span><input type="checkbox" id="swSound" ${S.sound ? 'checked' : ''}></label>
@@ -2814,9 +3106,19 @@ const ACTIONS = {
     store.set('sel', S.sel); renderSelects(); renderScore(); renderPreview();
   },
   balance: () => balanceTeams(),
-  badge: el => toast(el.dataset.desc, 'info'),
-  win: el => { if (S.target) setScore(el.dataset.team, S.target); },
-  target: el => { S.target = Number(el.dataset.v); store.set('target', S.target); renderScore(); renderSettings(); },
+  win: el => setScore(el.dataset.team, S.league.target),
+  league: el => {
+    if (!S.isAdmin || !requireDb()) return;
+    const next = { ...S.league, [el.dataset.k]: Number(el.dataset.v) };
+    if (next.cap && next.cap <= next.target) next.cap = 0;
+    S.league = next; store.set('league', next);
+    const { doc, setDoc } = S.fs;
+    setDoc(doc(S.db, 'config', 'league'), { ...next, updatedAt: Date.now() }).catch(err => toast(`Speichern fehlgeschlagen: ${errMsg(err)}`, 'error'));
+    renderSettings(); renderScore();
+  },
+  qp: el => quickPick(el.dataset.pid),
+  qpClear: () => { quickSlots().forEach(s => { S.sel[s] = ''; }); store.set('sel', S.sel); renderSelects(); renderPreview(); },
+  rematch: el => rematch(el.dataset.mid),
   compareWith: el => {
     S.cmpA = el.dataset.pid;
     if (S.cmpB === S.cmpA) S.cmpB = '';
@@ -2845,27 +3147,21 @@ const ACTIONS = {
   lbfilter: el => { S.lbFilter = el.dataset.v; renderLeaderboard(); },
   histmode: el => { S.histMode = el.dataset.v; S.histLimit = CFG.histPage; renderHistory(); },
   histMore: () => { S.histLimit += CFG.histPage; renderHistory(); },
-  dypToggle: el => {
-    const id = el.dataset.pid, set = new Set(dypPresent());
-    set.has(id) ? set.delete(id) : set.add(id);
-    S.dyp.present = [...set]; saveDyp(); renderDyp();
+  tourNew: () => tourNew(),
+  tourOpen: el => { S.tourSel = el.dataset.tid; store.set('tourSel', S.tourSel); renderDyp(); },
+  tourToggle: el => {
+    const t = curTour(); if (!t) return;
+    const pid = el.dataset.pid;
+    tourTx(t.id, x => { const set = new Set(x.present || []); set.has(pid) ? set.delete(pid) : set.add(pid); return { patch: { present: [...set] } }; });
   },
-  dypAll: el => { S.dyp.present = el.dataset.v === '1' ? activePlayers().map(p => p.id) : []; saveDyp(); renderDyp(); },
-  dypMode: el => { S.dyp.mode = el.dataset.v; saveDyp(); renderDyp(); },
-  dypDraw: () => dypDraw(),
-  dypScore: el => {
-    const f = S.dyp.fixtures[Number(el.dataset.fx)];
-    if (!f || f.done) return;
-    f[el.dataset.k] = Math.max(0, Math.min(CFG.maxScore, f[el.dataset.k] + Number(el.dataset.d)));
-    saveDyp(); renderDyp();
-  },
-  dypSubmit: el => dypSubmit(Number(el.dataset.fx)),
-  dypReset: async () => {
-    const ok = await ask({ title: 'Turnier beenden?', msg: 'Runden und Tabelle werden zurückgesetzt, gewertete Spiele bleiben.', ok: 'Beenden' });
-    if (!ok) return;
-    S.dyp = { present: S.dyp.present, mode: S.dyp.mode, round: 0, fixtures: [], resting: [], rest: {}, pair: {}, opp: {}, results: [], startedAt: 0 };
-    saveDyp(); renderDyp();
-  },
+  tourAll: el => { const t = curTour(); if (!t) return; const all = el.dataset.v === '1' ? activePlayers().map(p => p.id) : []; tourTx(t.id, () => ({ patch: { present: all } })); },
+  tourMode: el => { const t = curTour(); if (!t) return; tourTx(t.id, () => ({ patch: { mode: el.dataset.v } })); },
+  tourDraw: () => tourDraw(),
+  tourRedraw: () => tourRedraw(),
+  tourScore: el => { const t = curTour(); if (!t) return; const sc = fxScore(t, Number(el.dataset.fx)); sc[el.dataset.k] = Math.max(0, Math.min(CFG.maxScore, sc[el.dataset.k] + Number(el.dataset.d))); renderDyp(); },
+  tourWin: el => { const t = curTour(); if (!t) return; fxScore(t, Number(el.dataset.fx))[el.dataset.k] = S.league.target; renderDyp(); },
+  tourSubmit: el => tourSubmit(Number(el.dataset.fx)),
+  tourEnd: () => tourEnd(),
   admin: async () => {
     if (S.isAdmin) { setAdmin(false); toast('Admin-Modus beendet.', 'info'); return; }
     $('#adminPw').value = ''; $('#adminErr').textContent = '';
@@ -2890,7 +3186,7 @@ document.addEventListener('click', e => {
   if (!el || el.disabled) return;
   const fn = ACTIONS[el.dataset.action];
   if (!fn) return;
-  if (!(S.loaded.players && S.loaded.matches) && !['admin', 'openSettings', 'openQr', 'printQr', 'reload', 'tab', 'mode', 'score', 'setScore', 'win', 'target'].includes(el.dataset.action)) {
+  if (!(S.loaded.players && S.loaded.matches) && !['admin', 'openSettings', 'openQr', 'printQr', 'reload', 'tab', 'mode', 'score', 'setScore', 'win'].includes(el.dataset.action)) {
     toast('Daten werden noch geladen …', 'info'); return;
   }
   fn(el);
