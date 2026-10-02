@@ -326,6 +326,7 @@ tr.clickable:hover td{background:rgba(255,255,255,.025)}
 .sidebar .bar{height:10px;border-radius:5px;overflow:hidden;display:flex;background:var(--panel-2);margin:7px 0 5px}
 .sidebar .bar .b{background:var(--blue)} .sidebar .bar .g{background:var(--green);flex:1}
 .records{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+@media (max-width:859px){.records>.rec:last-child:nth-child(odd){grid-column:1/-1}}
 @media (max-width:559px){.rec{padding:11px 12px}.rec .rv{font-size:14.5px}.rec .rm{font-size:12.5px}.rec .rh{font-size:12.5px}}
 @media (min-width:860px){.records{grid-template-columns:1fr 1fr 1fr}}
 .rec{background:var(--panel-1);border:1px solid var(--line);border-radius:var(--r-md);padding:13px 14px;display:grid;gap:3px;position:relative}
@@ -515,6 +516,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
       <circle cx="13.8" cy="29.2" r="2.6"/>
       <g style="stroke-width:var(--zt,1)"><path d="M11 11.8v8.9M16 6.3l2 5.5M22.5 6.3l-.8 5.5M26 6.4l-6.5 13.7M15 20.5l-1.2 6.6M20.5 20.3l-6.2 6.8M55.5 15.8l.8 2.2"/><circle cx="56.6" cy="18.8" r="1"/></g>
     </g></symbol>
+    <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></symbol>
     <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></symbol>
     <symbol id="i-compare" viewBox="0 0 24 24"><path d="M8 3v18M16 3v18M3 8h5M16 16h5M3 16h5M16 8h5"/></symbol>
     <symbol id="i-laurel" viewBox="0 0 24 24"><path d="M12 21v-4M7 20c-3-2-4.5-5.5-4-10M17 20c3-2 4.5-5.5 4-10M4 14c1.5 0 3 .6 3.5 2M20 14c-1.5 0-3 .6-3.5 2M3.5 9.5c1.3.4 2.3 1.5 2.5 3M20.5 9.5c-1.3.4-2.3 1.5-2.5 3"/><circle cx="12" cy="9" r="4"/></symbol>
@@ -999,7 +1001,7 @@ function fresh() {
   return {
     mu: MU0, sigma: SIGMA0, games: 0, wins: 0, losses: 0, gf: 0, ga: 0, cs: 0,
     streak: 0, best: 0, first: 0, last: 0, hist: [], form: [],
-    fw: 0, fl: 0, dw: 0, dl: 0, fe: 0, de: 0, giant: 0, dog: 0, closeW: 0, closeN: 0, fGF: 0, fGX: 0, fN: 0, dGA: 0, dGX: 0, dN: 0, sN: 0, sW: 0, sE: 0, lastVs: {}, opp: {}, par: {}
+    fw: 0, fl: 0, dw: 0, dl: 0, fe: 0, de: 0, giant: 0, dog: 0, closeW: 0, closeN: 0, fGF: 0, fGA: 0, fN: 0, dGF: 0, dGA: 0, dN: 0, lastVs: {}, opp: {}, par: {}
   };
 }
 
@@ -1026,29 +1028,6 @@ function tsUpdate(W, L, mf = 1, beta = BETA7) {
   };
   W.forEach(r => apply(r, 1, W.length));
   L.forEach(r => apply(r, -1, L.length));
-}
-
-/* Erwarteter Toranteil q eines Teams, wenn es mit Wahrscheinlichkeit p gewinnt
-   (Torrennen nach den Regeln des Spiels, per DP invertiert, gecacht). */
-const _qCache = new Map();
-function raceWinP(q, R) {
-  const memo = new Map(), by = R.winBy || 1, cap = R.cap || 0, T = R.target;
-  const done = (x, y) => (x >= T && x - y >= by) || (cap && x >= cap);
-  const f = (a, b) => {
-    if (a + b > 60) return 0.5;
-    const k = a * 128 + b; if (memo.has(k)) return memo.get(k);
-    const v = done(a, b) ? 1 : done(b, a) ? 0 : q * f(a + 1, b) + (1 - q) * f(a, b + 1);
-    memo.set(k, v); return v;
-  };
-  return f(0, 0);
-}
-function goalShare(p, R) {
-  const key = Math.round(p * 200) + '|' + R.target + '|' + (R.winBy || 1) + '|' + (R.cap || 0);
-  if (_qCache.has(key)) return _qCache.get(key);
-  const t = Math.min(Math.max(Math.round(p * 200) / 200, 0.005), 0.995);
-  let lo = 0, hi = 1;
-  for (let i = 0; i < 30; i++) { const m = (lo + hi) / 2; raceWinP(m, R) < t ? lo = m : hi = m; }
-  const q = (lo + hi) / 2; _qCache.set(key, q); return q;
 }
 
 /* Spielt eine chronologisch sortierte Liste gültiger Spiele komplett durch. */
@@ -1093,12 +1072,10 @@ function replay(matches) {
       const diff = Math.abs(gf - ga);
       if (diff === 1 || (diff === 2 && Math.min(gf, ga) >= 5)) { r.closeN++; if (won) r.closeW++; } // knapp oder Verlängerung
       const pos = isBlue ? m.posB : m.posG;
-      const q = goalShare(exp, m.rules), tot = gf + ga;
       if (m.mode === '2v2' && pos) {
-        if (pos.forward === id) { won ? r.fw++ : r.fl++; r.fe += exp; r.fGF += gf; r.fGX += q * tot; r.fN++; }
-        else if (pos.defense === id) { won ? r.dw++ : r.dl++; r.de += exp; r.dGA += ga; r.dGX += (1 - q) * tot; r.dN++; }
+        if (pos.forward === id) { won ? r.fw++ : r.fl++; r.fe += exp; r.fGF += gf; r.fGA += ga; r.fN++; }
+        else if (pos.defense === id) { won ? r.dw++ : r.dl++; r.de += exp; r.dGF += gf; r.dGA += ga; r.dN++; }
       }
-      if (m.mode === '1v1') { r.sN++; if (won) r.sW++; r.sE += exp; }
       const opps = isBlue ? m.greenIds : m.blueIds;
       opps.forEach(o => { const x = r.opp[o] || (r.opp[o] = { w: 0, l: 0 }); won ? x.w++ : x.l++; });
       if (m.mode === '1v1') r.lastVs = { ...r.lastVs, [opps[0]]: { won, ts: m.ts } };
@@ -2321,11 +2298,20 @@ function renderInsights() {
   const hot = top(pl, x => x.r.streak);
   const bestEver = top([...d.players.values()].map(p => ({ p, r: R.get(p.id) })).filter(x => x.r), x => x.r.best);
   // Tore nach tatsächlicher Position im Doppel, bereinigt um die Stärke der Gegner
-  const POSMIN = 8;
-  const gk = top(pl.filter(x => x.r.fN >= POSMIN), x => (x.r.fGF - x.r.fGX) / x.r.fN);
-  const df = top(pl.filter(x => x.r.dN >= POSMIN), x => (x.r.dGX - x.r.dGA) / x.r.dN);
-  const sg = top(pl.filter(x => x.r.sN >= POSMIN), x => (x.r.sW - x.r.sE) / x.r.sN);
-  const d1 = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1).replace('.', ',');
+  const POSMIN = 5;
+  // Tore pro Spiel nach Position. Nur Spiele nach den aktuellen Siegtoren, weil ein Spiel
+  // bis 7 mehr Tore hat als eins bis 5 und sich die Durchschnitte sonst nicht vergleichen lassen.
+  const posGoals = {};
+  valid.filter(m => m.mode === '2v2' && m.target === S.league.target && m.posB && m.posG).forEach(m => {
+    [[m.posB, m.sb, m.sg], [m.posG, m.sg, m.sb]].forEach(([pos, gf, ga]) => {
+      const f = posGoals[pos.forward] || (posGoals[pos.forward] = { fN: 0, fG: 0, dN: 0, dA: 0 }); f.fN++; f.fG += gf;
+      const d = posGoals[pos.defense] || (posGoals[pos.defense] = { fN: 0, fG: 0, dN: 0, dA: 0 }); d.dN++; d.dA += ga;
+    });
+  });
+  const pg = pl.map(x => ({ ...x, g: posGoals[x.p.id] || { fN: 0, fG: 0, dN: 0, dA: 0 } }));
+  const gk = top(pg.filter(x => x.g.fN >= POSMIN), x => x.g.fG / x.g.fN + x.g.fN / 1e4);
+  const df = top(pg.filter(x => x.g.dN >= POSMIN), x => -x.g.dA / x.g.dN + x.g.dN / 1e4);
+  const avg1 = v => v.toFixed(1).replace('.', ',');
   const nerve = top(pl.filter(x => x.r.closeN >= 5), x => x.r.closeW / x.r.closeN + x.r.closeN / 1e4);
   const cs = top(pl.filter(x => x.r.wins >= 5), x => x.r.cs / x.r.wins);
 
@@ -2351,11 +2337,10 @@ function renderInsights() {
     recCard({ ic: 'flame', color: 'var(--green)', title: 'Heiße Serie', tip: 'Längste laufende Siegesserie.', value: hot && hot.r.streak >= 2 ? hot.p.name : '', meta: hot && hot.r.streak >= 2 ? `${hot.r.streak} Siege in Folge, läuft noch` : 'Aktuell keine Serie ab 2 Siegen', pid: hot && hot.r.streak >= 2 ? hot.p.id : null }),
     recCard({ ic: 'trophy', color: 'var(--cyan)', title: 'Rekordserie', tip: 'Längste Siegesserie aller Zeiten.', value: bestEver && bestEver.r.best >= 2 ? bestEver.p.name : '', meta: bestEver && bestEver.r.best >= 2 ? `${bestEver.r.best} Siege am Stück` : 'Noch keine Serie', pid: bestEver && bestEver.r.best >= 2 ? bestEver.p.id : null }),
     recCard({ ic: 'trend', color: 'var(--green)', title: 'Aufsteiger (30 Tage)', tip: 'Größter Wertungsgewinn in den letzten 30 Tagen.', value: climber && climber[1] > 0 ? nameOf(climber[0]) : '', meta: climber && climber[1] > 0 ? `${signed(climber[1])} Wertungspunkte` : 'Noch niemand im Plus', pid: climber && climber[1] > 0 ? climber[0] : null }),
-    recCard({ ic: 'bolt', color: 'var(--cyan)', title: 'Tormaschine', tip: 'Wer im Sturm mehr Tore holt, als gegen diese Gegner zu erwarten war. Nur Doppel im Sturm, ab 8 Spielen.', value: gk && gk.r.fGF > gk.r.fGX ? gk.p.name : '', meta: gk && gk.r.fGF > gk.r.fGX ? `${d1((gk.r.fGF - gk.r.fGX) / gk.r.fN)} Tore pro Spiel über Erwartung (Ø ${(gk.r.fGF / gk.r.fN).toFixed(1).replace('.', ',')})` : `Ab ${POSMIN} Doppeln im Sturm`, pid: gk && gk.r.fGF > gk.r.fGX ? gk.p.id : null }),
-    recCard({ ic: 'shield', color: 'var(--green)', title: 'Abwehrbollwerk', tip: 'Wer in der Abwehr weniger Gegentore kassiert, als gegen diese Gegner zu erwarten war. Nur Doppel in der Abwehr, ab 8 Spielen.', value: df && df.r.dGX > df.r.dGA ? df.p.name : '', meta: df && df.r.dGX > df.r.dGA ? `${((df.r.dGX - df.r.dGA) / df.r.dN).toFixed(1).replace('.', ',')} Gegentore pro Spiel weniger als erwartet (Ø ${(df.r.dGA / df.r.dN).toFixed(1).replace('.', ',')})` : `Ab ${POSMIN} Doppeln in der Abwehr`, pid: df && df.r.dGX > df.r.dGA ? df.p.id : null }),
-    recCard({ ic: 'target', color: 'var(--cyan)', title: 'Einzel-Ass', tip: 'Wer im Einzel öfter gewinnt, als nach der Wertung zu erwarten war. Ab 8 Einzeln.', value: sg && sg.r.sW > sg.r.sE ? sg.p.name : '', meta: sg && sg.r.sW > sg.r.sE ? `+${Math.round((sg.r.sW - sg.r.sE) / sg.r.sN * 100)} % Siege über Erwartung` : `Ab ${POSMIN} Einzeln`, pid: sg && sg.r.sW > sg.r.sE ? sg.p.id : null }),
-    recCard({ ic: 'shield', color: 'var(--cyan)', title: 'Nervenstark', tip: 'Beste Siegquote in knappen Spielen: ein Tor Unterschied oder Verlängerung. Ab 5 knappen Spielen.', value: nerve ? nerve.p.name : '', meta: nerve ? `gewinnt ${pct(nerve.r.closeW / nerve.r.closeN)} der knappen Spiele` : 'Ab 5 knappen Spielen', pid: nerve?.p.id }),
-    recCard({ ic: 'target', color: 'var(--green)', title: 'Zu-Null-König', tip: 'Höchster Anteil an Siegen ohne Gegentor. Ab 5 Siegen.', value: cs && cs.r.cs > 0 ? cs.p.name : '', meta: cs && cs.r.cs > 0 ? `${pct(cs.r.cs / cs.r.wins)} der Siege ohne Gegentor` : 'Noch kein Zu-Null-Sieg', pid: cs && cs.r.cs > 0 ? cs.p.id : null }),
+    recCard({ ic: 'bolt', color: 'var(--cyan)', title: 'Tormaschine', tip: `Die meisten Tore pro Spiel im Sturm (Teamtore im Doppel). Nur Spiele bis ${S.league.target}, ab 5 Doppeln im Sturm.`, value: gk ? gk.p.name : '', meta: gk ? `Ø ${avg1(gk.g.fG / gk.g.fN)} Tore pro Spiel im Sturm` : `Ab ${POSMIN} Doppeln bis ${S.league.target} im Sturm`, pid: gk?.p.id }),
+    recCard({ ic: 'shield', color: 'var(--green)', title: 'Abwehrbollwerk', tip: `Die wenigsten Gegentore pro Spiel in der Abwehr. Nur Spiele bis ${S.league.target}, ab 5 Doppeln in der Abwehr.`, value: df ? df.p.name : '', meta: df ? `Ø ${avg1(df.g.dA / df.g.dN)} Gegentore pro Spiel in der Abwehr` : `Ab ${POSMIN} Doppeln bis ${S.league.target} in der Abwehr`, pid: df?.p.id }),
+    recCard({ ic: 'pulse', color: 'var(--cyan)', title: 'Nervenstark', tip: 'Beste Siegquote in knappen Spielen: ein Tor Unterschied oder Verlängerung. Ab 5 knappen Spielen.', value: nerve ? nerve.p.name : '', meta: nerve ? `gewinnt ${pct(nerve.r.closeW / nerve.r.closeN)} der knappen Spiele` : 'Ab 5 knappen Spielen', pid: nerve?.p.id }),
+    recCard({ ic: 'target', color: 'var(--green)', title: 'Zu-Null-König', tip: 'Höchster Anteil an Siegen ohne Gegentor, egal auf welcher Position. Ab 5 Siegen.', value: cs && cs.r.cs > 0 ? cs.p.name : '', meta: cs && cs.r.cs > 0 ? `${pct(cs.r.cs / cs.r.wins)} der Siege ohne Gegentor` : 'Noch kein Zu-Null-Sieg', pid: cs && cs.r.cs > 0 ? cs.p.id : null }),
     recCard({ ic: 'spark', color: 'var(--magenta)', title: 'Größte Überraschung', tip: 'Der Sieg mit der geringsten Siegchance vor dem Spiel.', value: upset && upset.pw < 0.45 ? (upset.m.winner === 'blue' ? upset.m.blueIds : upset.m.greenIds).map(nameOf).join(' & ') : '', meta: upset && upset.pw < 0.45 ? `Sieg mit nur ${pctP(upset.pw)} Chance, ${fmtDate(upset.m.ts)}` : 'Bisher gewinnen die Favoriten' }),
     recCard({ ic: 'sword', color: 'var(--cyan)', title: 'Größte Rivalität', tip: 'Die Paarung, die am häufigsten gegeneinander gespielt hat.', value: riv && riv.n >= 3 ? `${nameOf(riv.x)} gegen ${nameOf(riv.y)}` : '', meta: riv && riv.n >= 3 ? (riv.wx * 2 === riv.n ? 'Völlig ausgeglichen' : `${nameOf(riv.wx * 2 > riv.n ? riv.x : riv.y)} gewinnt ${pct(Math.max(riv.wx, riv.n - riv.wx) / riv.n)}`) : 'Ab 3 Duellen' })
   ];
