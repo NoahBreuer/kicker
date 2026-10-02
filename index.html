@@ -347,6 +347,7 @@ tr.clickable:hover td{background:rgba(255,255,255,.025)}
 button.brow:hover{background:rgba(63,208,224,.06)}
 button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 .bhead{padding:0 2px 7px;margin-bottom:6px;border-bottom:1px solid #18212c}
+.bhead span.crown{font-size:15px;line-height:1;text-align:center;letter-spacing:0}
 .bhead span{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan);white-space:nowrap;overflow:hidden}
 .bc{display:flex;min-width:0}
 .bc .flap{flex:none}
@@ -2116,7 +2117,8 @@ function boardLayout() {
   const cols = [
     { k: 'rank', n: 2, label: 'Pl.', tip: 'Platz. Einen Platz gibt es ab 5 Spielen.' },
     { k: 'lamp', px: 10, label: '' },
-    { k: 'name', n: 0, label: 'Spieler', tip: 'Schachtitel vor dem Namen: GM ab 1750, IM ab 1675, FM ab 1600, CM ab 1550 Punkten.' },
+    { k: 'name', n: 0, label: 'Spieler' },
+    { k: 'title', n: 2, label: '♔', tip: 'Schachtitel nach Wertung: GM ab 1750, IM ab 1675, FM ab 1600, CM ab 1550 Punkten. Erst nach der Einstufung.' },
     { k: 'rt', n: 4, label: 'Wertung', tip: 'Elo-Skala, Start bei 1500. 200 Punkte Unterschied: Der Stärkere gewinnt etwa 3 von 4 Spielen.' }
   ];
   const extra = [
@@ -2179,7 +2181,7 @@ function renderLeaderboard() {
 
   const body = $('#lbBody');
   const cols = boardLayout();
-  $('#boardHead').innerHTML = cols.map(c => c.tip ? `<span ${tipAttr(c.tip)}>${esc(c.label)}</span>` : `<span>${esc(c.label)}</span>`).join('');
+  $('#boardHead').innerHTML = cols.map(c => c.tip ? `<span ${c.k === 'title' ? 'class="crown" aria-label="Schachtitel"' : ''} ${tipAttr(c.tip)}>${esc(c.label)}</span>` : `<span>${esc(c.label)}</span>`).join('');
   const shown = [
     ...rows.filter(placed).map((x, i) => ({ ...x, rank: i + 1 })),
     ...rows.filter(x => !placed(x)).map(x => ({ ...x, rank: null }))
@@ -2216,12 +2218,10 @@ function renderLeaderboard() {
       switch (c.k) {
         case 'rank': return flap(key('rank'), rank == null ? '  ' : num(rank, 2), '', idx);
         case 'lamp': return lamp;
-        case 'name': {
+        case 'name': return flap(key('name' + c.n), boardName(p.name, c.n), '', idx);
+        case 'title': {
           const ct = chessTitle(rating, rank != null);
-          const pre = ct ? ct.abbr + ' ' : '';
-          const txt = pre + boardName(p.name, c.n - pre.length).trimEnd();
-          const full = txt.padEnd(c.n, ' ').slice(0, c.n);
-          return flap(key('name' + c.n), full, '', idx, [...full].map((_, i2) => i2 < 2 && ct ? 'tt' : ''));
+          return flap(key('title'), ct ? ct.abbr : '  ', '', idx, ['tt', 'tt']);
         }
         case 'rt': return flap(key('rt'), num(rating, 4), rank === 1 ? 'hl' : rank == null ? 'prov' : '', idx);
         case 'quote': return flap(key('q'), r.games ? num(Math.round(rate * 100), 3) : '  -', '', idx);
