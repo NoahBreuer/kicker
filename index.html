@@ -1252,7 +1252,7 @@ const S = {
   histPlayer: '', histMode: 'all', histLimit: CFG.histPage,
   profileId: null,
   sound: store.get('sound', true),
-  tourSel: store.get('tourSel', ''), tourScores: {},
+  tourSel: store.get('tourSel', ''),
   cmpA: '', cmpB: '',
 };
 
@@ -2548,8 +2548,24 @@ function curTour() {
 const tourLabel = t => `${fmtDay(t.createdAt)}, ${fmtTime(t.createdAt)} Uhr`;
 const tourPresent = t => { const ok = new Set(activePlayers().map(p => p.id)); return (t.present || []).filter(id => ok.has(id)); };
 const tourResults = t => { const known = new Map(D().all.map(m => [m.id, m])); return (t.results || []).filter(r => { const m = known.get(r.matchId); return !m || !m.voided; }); };
-const scoreKey = (t, i) => `${t.id}|${t.round}|${i}`;
-const fxScore = (t, i) => S.tourScores[scoreKey(t, i)] || (S.tourScores[scoreKey(t, i)] = { sb: 0, sg: 0 });
+/* Spielstand liegt im Turnier selbst (Feld live), damit alle Handys dasselbe sehen.
+   Jede Auslosung hat eine eigene Kennung, sonst blieben alte Tore an neuen Paarungen hängen. */
+const drawKey = t => t.drawId || `r${t.round}`;
+const liveKey = (t, i) => `${drawKey(t)}_${i}`;
+const fxScore = (t, i) => { const v = (t.live || {})[liveKey(t, i)]; return { sb: Number(v && v.sb) || 0, sg: Number(v && v.sg) || 0 }; };
+const newDrawId = () => Math.random().toString(36).slice(2, 10);
+const tourBusy = new Set();
+function tourWrite(t, patch) {
+  if (!requireDb()) return;
+  const { doc, updateDoc } = S.fs;
+  updateDoc(doc(S.db, 'tournaments', t.id), { ...patch, updatedAt: Date.now() })
+    .catch(err => toast(`Turnier nicht gespeichert: ${errMsg(err)}`, 'error'));
+}
+function setLive(t, i, k, v) {
+  const cur = fxScore(t, i);
+  cur[k] = Math.max(0, Math.min(CFG.maxScore, v));
+  tourWrite(t, { [`live.${liveKey(t, i)}`]: cur });
+}
 
 async function tourTx(tid, fn) {
   if (!requireDb()) return null;
@@ -2566,11 +2582,12 @@ async function tourTx(tid, fn) {
       return out.result ?? true;
     });
   } catch (err) {
-    toast(err && err.userMsg ? err.userMsg : `Das hat nicht geklappt: ${errMsg(err)}`, 'error');
+    const slow = /unavailable|deadline|aborted|failed-precondition/.test(String(err && err.code));
+    toast(err && err.userMsg ? err.userMsg : slow ? 'Die Verbindung war zu langsam. Bitte noch einmal versuchen.' : `Das hat nicht geklappt: ${errMsg(err)}`, err && err.level || 'error');
     return null;
   }
 }
-const userErr = msg => Object.assign(new Error(msg), { userMsg: msg });
+const userErr = (msg, level = 'error') => Object.assign(new Error(msg), { userMsg: msg, level });
 
 function renderDyp() {
   const list = openTours(), t = curTour();
@@ -2622,7 +2639,7 @@ function renderDyp() {
         <div class="row" style="justify-content:space-between"><h3>Runde ${t.round}, Spiel ${i + 1}</h3>
           <span class="tag ${f.done ? '' : 'dyp'}">${f.done ? 'gewertet' : `Prognose ${pctP(pb)} : ${pctP(1 - pb)}`}</span></div>
         <div class="fx-teams">${team('blue', f.blue, 'sb')}${team('green', f.green, 'sg')}</div>
-        ${f.done ? '' : `<button class="btn primary block" data-action="tourSubmit" data-fx="${i}">${icon('check')}Ergebnis werten</button>`}
+        ${f.done ? '' : tourBusy.has(liveKey(t, i)) ? `<button class="btn primary block" disabled>Wird gewertet …</button>` : `<button class="btn primary block" data-action="tourSubmit" data-fx="${i}">${icon('check')}Ergebnis werten</button>`}
       </div>`;
     }).join('');
   }
@@ -2647,7 +2664,7 @@ async function tourNew() {
   const { doc, collection, setDoc } = S.fs;
   const ref = doc(collection(S.db, 'tournaments'));
   const now = Date.now();
-  setDoc(ref, { status: 'open', createdAt: now, updatedAt: now, createdBy: deviceId, present: [], mode: 'fair', round: 0, fixtures: [], resting: [], played: {}, rest: {}, pair: {}, opp: {}, prev: null, results: [], winners: [] })
+  setDoc(ref, { status: 'open', createdAt: now, updatedAt: now, createdBy: deviceId, present: [], mode: 'fair', round: 0, fixtures: [], resting: [], played: {}, rest: {}, pair: {}, opp: {}, prev: null, results: [], winners: [], drawId: '', live: {} })
     .catch(err => toast(`Turnier konnte nicht angelegt werden: ${errMsg(err)}`, 'error'));
   S.tourSel = ref.id; store.set('tourSel', S.tourSel);
 }
@@ -2657,7 +2674,7 @@ function drawPatch(t, base, fair) {
   if (ids.length < 4) throw userErr('Mindestens vier Anwesende auswählen.');
   const plan = planRound(ids, base, fair, ratingOf);
   plan.fixtures.forEach(f => ['blue', 'green'].forEach(k => { if (swapGain(ratingOf(f[k][0]), ratingOf(f[k][1])) > 0) f[k] = [f[k][1], f[k][0]]; }));
-  return { fixtures: plan.fixtures, resting: plan.resting, rest: plan.rest, pair: plan.pair, opp: plan.opp, played: plan.played };
+  return { fixtures: plan.fixtures, resting: plan.resting, rest: plan.rest, pair: plan.pair, opp: plan.opp, played: plan.played, drawId: newDrawId(), live: {} };
 }
 async function tourDraw() {
   const t = curTour(); if (!t) return;
@@ -2687,23 +2704,28 @@ async function tourRedraw() {
 async function tourSubmit(i) {
   const t = curTour(); if (!t) return;
   const f = (t.fixtures || [])[i]; if (!f || f.done) return;
+  const busyKey = liveKey(t, i);
+  if (tourBusy.has(busyKey)) return;
   const { sb, sg } = fxScore(t, i);
   if (sb === sg) return toast('Unentschieden gibt es beim Kicker nicht.', 'error');
   if (!plausibleScore(sb, sg, S.league)) {
     const okOdd = await ask({ title: 'Ergebnis prüfen', msg: `${sb} : ${sg} passt nicht zu ${rulesText()}. Trotzdem werten?`, ok: 'Werten' });
     if (!okOdd) return;
   }
-  const round = t.round;
+  const draw = drawKey(t);
   const { doc, collection, serverTimestamp } = S.fs;
   const mref = doc(collection(S.db, 'matches'));
+  tourBusy.add(busyKey); renderDyp();
   const res = await tourTx(t.id, (x, tx) => {
     const fx = (x.fixtures || []).map(z => ({ ...z }));
-    if (x.round !== round || !fx[i] || fx[i].done) throw userErr('Dieses Spiel wurde schon gewertet oder neu ausgelost.');
+    if (drawKey(x) !== draw || !fx[i]) throw userErr('Die Runde wurde gerade auf einem anderen Handy neu ausgelost. Bitte die Paarung prüfen.');
+    if (fx[i].done) throw userErr(`Dieses Spiel ist schon gewertet (${fx[i].sb} : ${fx[i].sg}).`, 'info');
     const m = { ...buildMatch(fx[i].blue, fx[i].green, sb, sg, 'dyp'), tournamentId: x.id, deviceId, voided: false, schema: 2, createdAt: serverTimestamp() };
     tx.set(mref, m);
     fx[i] = { ...fx[i], done: true, matchId: mref.id, sb, sg };
     return { patch: { fixtures: fx, results: [...(x.results || []), { matchId: mref.id, blue: fx[i].blue, green: fx[i].green, sb, sg }] } };
   });
+  tourBusy.delete(busyKey); renderDyp();
   if (!res) return;
   S.pendingHi = mref.id;
   chime();
@@ -3136,15 +3158,16 @@ const ACTIONS = {
   tourOpen: el => { S.tourSel = el.dataset.tid; store.set('tourSel', S.tourSel); renderDyp(); },
   tourToggle: el => {
     const t = curTour(); if (!t) return;
-    const pid = el.dataset.pid;
-    tourTx(t.id, x => { const set = new Set(x.present || []); set.has(pid) ? set.delete(pid) : set.add(pid); return { patch: { present: [...set] } }; });
+    const { arrayUnion, arrayRemove } = S.fs;
+    const pid = el.dataset.pid, on = (t.present || []).includes(pid);
+    tourWrite(t, { present: on ? arrayRemove(pid) : arrayUnion(pid) });
   },
-  tourAll: el => { const t = curTour(); if (!t) return; const all = el.dataset.v === '1' ? activePlayers().map(p => p.id) : []; tourTx(t.id, () => ({ patch: { present: all } })); },
-  tourMode: el => { const t = curTour(); if (!t) return; tourTx(t.id, () => ({ patch: { mode: el.dataset.v } })); },
+  tourAll: el => { const t = curTour(); if (!t) return; tourWrite(t, { present: el.dataset.v === '1' ? activePlayers().map(p => p.id) : [] }); },
+  tourMode: el => { const t = curTour(); if (!t) return; tourWrite(t, { mode: el.dataset.v }); },
   tourDraw: () => tourDraw(),
   tourRedraw: () => tourRedraw(),
-  tourScore: el => { const t = curTour(); if (!t) return; const sc = fxScore(t, Number(el.dataset.fx)); sc[el.dataset.k] = Math.max(0, Math.min(CFG.maxScore, sc[el.dataset.k] + Number(el.dataset.d))); renderDyp(); },
-  tourWin: el => { const t = curTour(); if (!t) return; fxScore(t, Number(el.dataset.fx))[el.dataset.k] = S.league.target; renderDyp(); },
+  tourScore: el => { const t = curTour(); if (!t) return; const i = Number(el.dataset.fx); setLive(t, i, el.dataset.k, fxScore(t, i)[el.dataset.k] + Number(el.dataset.d)); },
+  tourWin: el => { const t = curTour(); if (!t) return; setLive(t, Number(el.dataset.fx), el.dataset.k, S.league.target); },
   tourSubmit: el => tourSubmit(Number(el.dataset.fx)),
   tourEnd: () => tourEnd(),
   admin: async () => {
