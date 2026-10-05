@@ -703,7 +703,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
         <div class="seg" role="group" aria-label="Zeitraum" id="segPeriod">
           <button data-action="period" data-v="all">Gesamt</button>
           <button data-action="period" data-v="season" id="btnSeason">Saison</button>
-          <button data-action="period" data-v="30d">30 Tage</button>
+          <button data-action="period" data-v="month" id="btnMonth">Monat</button>
         </div>
         <div class="seg" role="group" aria-label="Filter" id="segFilter">
           <button data-action="lbfilter" data-v="active">Aktiv</button>
@@ -1313,11 +1313,17 @@ const nameOf = id => D().players.get(id)?.name || '?';
 const ratingOf = id => D().full.R.get(id) || fresh();
 const activePlayers = () => [...D().players.values()].filter(p => !p.archived);
 
+/* Saison = Kalenderquartal, Monat = laufender Kalendermonat */
+const quarterOf = d => Math.floor(d.getMonth() / 3);
+const seasonLabel = (d = new Date()) => `Q${quarterOf(d) + 1} ${d.getFullYear()}`;
 function periodStart(period) {
-  if (period === 'season') return new Date(new Date().getFullYear(), 0, 1).getTime();
-  if (period === '30d') return Date.now() - 30 * DAY;
+  const now = new Date();
+  if (period === 'season') return new Date(now.getFullYear(), quarterOf(now) * 3, 1).getTime();
+  if (period === 'month') return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
   return 0;
 }
+// Mindestspiele für einen Platz: gesamt = Einstufung; Saison/Monat = wie für die Titel
+const minGamesFor = period => period === 'all' ? CFG.placement : CFG.fameMinGames;
 function standings(period) {
   const key = S.version + '|' + period;
   if (S.cache.has(key)) return S.cache.get(key);
@@ -1350,10 +1356,10 @@ function hallOfFame() {
       const pc = periodChamp(valid, d.getTime(), to);
       if (pc.n) res.months.push({ label: d.toLocaleDateString('de-DE', { month: 'short', year: 'numeric' }), live: to > now, ...pc });
     }
-    for (let y = first.getFullYear(); y <= new Date().getFullYear(); y++) {
-      const to = new Date(y + 1, 0, 1).getTime();
-      const pc = periodChamp(valid, new Date(y, 0, 1).getTime(), to);
-      if (pc.n) res.seasons.push({ label: `Saison ${y}`, live: to > now, ...pc });
+    for (let d = new Date(first.getFullYear(), quarterOf(first) * 3, 1); d.getTime() <= now; d = new Date(d.getFullYear(), d.getMonth() + 3, 1)) {
+      const to = new Date(d.getFullYear(), d.getMonth() + 3, 1).getTime();
+      const pc = periodChamp(valid, d.getTime(), to);
+      if (pc.n) res.seasons.push({ label: seasonLabel(d), live: to > now, ...pc });
     }
     const add = (id, kind) => { const t = res.titles[id] || (res.titles[id] = { months: 0, seasons: 0, tours: 0 }); t[kind]++; };
     res.months.filter(x => !x.live && x.champ).forEach(x => add(x.champ.id, 'months'));
@@ -2130,6 +2136,7 @@ function boardLayout() {
     const used = cols.reduce((s, c) => s + (c.k === 'name' ? 0 : c.px || gw(c.n)), 0) + (cols.length - 1) * gg;
     return Math.floor((W - used + gap) / (cw + gap));
   };
+  if (S.lbPeriod !== 'all') cols.splice(cols.findIndex(c => c.k === 'title'), 1); // Titel gehören zur Gesamtwertung
   for (const e of extra) { cols.push(e); if (nameCells() < 13) { cols.pop(); break; } }
   cols.find(c => c.k === 'name').n = Math.max(6, Math.min(28, nameCells()));
   const tmpl = cols.map(c => c.k === 'name' ? 'minmax(0,1fr)' : `${c.px || gw(c.n)}px`).join(' ');
@@ -2160,21 +2167,25 @@ function renderSotm() {
 }
 
 function renderLeaderboard() {
-  const year = new Date().getFullYear();
-  $('#btnSeason').textContent = `Saison ${year}`;
+  const now = new Date();
+  const monthName = now.toLocaleDateString('de-DE', { month: 'long' });
+  const qStart = new Date(periodStart('season')).toLocaleDateString('de-DE', { day: 'numeric', month: 'long' });
+  $('#btnSeason').textContent = `Saison ${seasonLabel(now).split(' ')[0]}`;
+  $('#btnMonth').textContent = monthName;
   $$('#segPeriod button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.lbPeriod)));
   $$('#segFilter button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.lbFilter)));
   const subs = {
     all: `Aktiv: gespielt in den letzten 90 Tagen. Platz ab ${CFG.placement} Spielen.`,
-    season: `Nur Spiele seit 1. Januar ${year}.`,
-    '30d': 'Nur die letzten 30 Tage.'
+    season: `Saison ${seasonLabel(now)}: nur Spiele seit ${qStart}. Alle starten neu, Platz ab ${CFG.fameMinGames} Spielen.`,
+    month: `Nur Spiele im ${monthName}. Wer hier vorne liegt, wird Spieler des Monats. Platz ab ${CFG.fameMinGames} Spielen.`
   };
   $('#lbSub').textContent = subs[S.lbPeriod];
   renderSotm();
 
   const st = standings(S.lbPeriod);
   const rows = rankList(st.now, S.lbFilter, S.lbPeriod);
-  const placed = x => x.r.games >= CFG.placement;
+  const need = minGamesFor(S.lbPeriod);
+  const placed = x => x.r.games >= need;
   const prevRank = new Map(rankList(st.prev, S.lbFilter, S.lbPeriod).filter(placed).map((x, i) => [x.p.id, i + 1]));
   const sod = startOfDay();
   const q = S.lbQuery.trim().toLowerCase();
@@ -2190,7 +2201,7 @@ function renderLeaderboard() {
     const msg = activePlayers().length === 0
       ? `Noch keine Spieler angelegt.<br><button class="btn primary" data-action="addPlayer">${icon('userplus')}Spieler anlegen</button>`
       : q ? 'Kein Spieler passt zur Suche.'
-        : S.lbFilter === 'active' ? `In diesem Zeitraum hat noch niemand gespielt.<br><button class="btn sm" data-action="lbfilter" data-v="all">Alle anzeigen</button>`
+        : S.lbFilter === 'active' ? `${S.lbPeriod === 'month' ? `Im ${monthName} wurde noch nicht gespielt.` : 'In diesem Zeitraum hat noch niemand gespielt.'}`
           : 'Keine Spieler in diesem Zeitraum.';
     body.innerHTML = `<div class="empty">${msg}</div>`;
     return;
@@ -2202,7 +2213,7 @@ function renderLeaderboard() {
     let pre = '';
     if (rank == null && !divider) {
       divider = true;
-      pre = `<div class="bdiv" role="presentation">In Einstufung: Platz nach ${CFG.placement} Spielen</div>`;
+      pre = `<div class="bdiv" role="presentation">${S.lbPeriod === 'all' ? 'In Einstufung' : 'Noch zu wenige Spiele'}: Platz nach ${need} Spielen</div>`;
     }
     const rating = disp(r);
     const rate = r.games ? r.wins / r.games : 0;
@@ -2220,7 +2231,7 @@ function renderLeaderboard() {
         case 'lamp': return lamp;
         case 'name': return flap(key('name' + c.n), boardName(p.name, c.n), '', idx);
         case 'title': {
-          const ct = chessTitle(rating, rank != null);
+          const ct = S.lbPeriod === 'all' ? chessTitle(rating, rank != null) : null;
           return flap(key('title'), ct ? ct.abbr : '  ', '', idx, ['tt', 'tt']);
         }
         case 'rt': return flap(key('rt'), num(rating, 4), rank === 1 ? 'hl' : rank == null ? 'prov' : '', idx);
