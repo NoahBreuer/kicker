@@ -949,7 +949,7 @@ const CFG = {
   nameMax: 30,
   histPage: 40,
   fameMinGames: 4,   // Mindestspiele im Monat/in der Saison für einen Titel
-  appVersion: '2.5'
+  appVersion: '2.5.1'
 };
 
 /* ---------------- Helfer ---------------- */
@@ -1327,6 +1327,28 @@ function planRound(ids, st, fair, rOf, rnd = Math.random) {
   return { fixtures: best.fx, resting, ...next };
 }
 
+/* Ausgangslage für die nächste Auslosung eines Turniers.
+   - Gezählt wird nur, was wirklich gespielt wurde: Spiele einer Runde, die ohne Ergebnis
+     übersprungen wird, zählen weder als gespielt noch als Partner/Gegner.
+   - Nach einer längeren Pause (z. B. vom Mittag zum Nachmittag oder am nächsten Tag) beginnt
+     die Zählung neu, damit Neuankömmlinge nicht hinter denen landen, die vorher schon da waren.
+     Wer mit wem schon zusammen war, bleibt gemerkt. */
+const SESSION_GAP = 60 * 60e3;
+function tourBase(x, now = Date.now(), lastAt = 0) {
+  const key = (a, b) => (a < b ? a + '|' + b : b + '|' + a);
+  const dec = (o, k) => { if (o[k] > 1) o[k]--; else delete o[k]; };
+  const played = { ...(x.played || {}) }, rest = { ...(x.rest || {}) }, pair = { ...(x.pair || {}) }, opp = { ...(x.opp || {}) };
+  let resting = [...(x.resting || [])];
+  (x.fixtures || []).filter(f => !f.done).forEach(f => {
+    [...f.blue, ...f.green].forEach(id => dec(played, id));
+    [f.blue, f.green].forEach(([a, b]) => dec(pair, key(a, b)));
+    f.blue.forEach(a => f.green.forEach(c => dec(opp, key(a, c))));
+  });
+  const session = !!lastAt && now - lastAt <= SESSION_GAP;
+  if (!session) return { played: {}, rest: {}, pair, opp, resting: [], fresh: true };
+  return { played, rest, pair, opp, resting, fresh: false };
+}
+
 /* ---------------- Zustand ---------------- */
 const S = {
   fs: null, db: null, user: null,
@@ -1548,6 +1570,8 @@ function memoryFirestore() {
     serverTimestamp: () => ({ [SENT]: true }),
     arrayUnion: (...v) => ({ __op: 'union', v }), arrayRemove: (...v) => ({ __op: 'remove', v }),
     getDocsFromCache: async () => { throw new Error('kein Cache in der Vorschau'); },
+    getDocFromServer: async r => { const v = cols[r.col].get(r.id); return { exists: () => !!v, data: () => copy(v || {}) }; },
+    waitForPendingWrites: async () => {},
     onSnapshot: (ref, opts, cb) => { const l = { name: ref.name, wheres: ref.wheres, cb }; listeners.push(l); setTimeout(() => emit(ref.name), 0); return () => {}; },
     setDoc: async (ref, data) => { cols[ref.col].set(ref.id, copy(clean(data))); emit(ref.col); },
     updateDoc: async (ref, patch) => { cols[ref.col].set(ref.id, applyPatch(cols[ref.col].get(ref.id), patch)); emit(ref.col); },
@@ -1658,7 +1682,7 @@ async function subscribe() {
   }, err => console.warn('[Kicker] config', err));
 
   incremental('matches', ['timestamp', 'voidedAt'], list => { S.matchesRaw = list; S.loaded.matches = true; S.version++; });
-  incremental('tournaments', ['updatedAt'], list => { S.toursRaw = list; S.loaded.tournaments = true; S.version++; });
+  incremental('tournaments', ['updatedAt'], list => { S.toursServer = list; S.toursRaw = applyTourOverlay(list); S.loaded.tournaments = true; S.version++; });
 }
 
 /* Lädt eine Sammlung inkrementell: Bekanntes aus dem Offline-Cache, vom Server nur,
@@ -2765,6 +2789,7 @@ function tourEvents() {
       if (e.k === 'draw' || e.k === 'redraw') seen[e.round] = (seen[e.round] || 0) + 1;
       const ids = [...new Set([...(e.fx || []), ...(e.prev || [])].flatMap(f => [...f.b, ...f.g]).concat(e.rest || [], e.prevRest || [], e.winners || []))];
       if (e.k === 'redraw') out.push({ ev: true, k: 'redraw', ts: e.t, tour: t, e, nth: seen[e.round], ids });
+      if (e.k === 'draw' && e.skipped && e.skipped.length) out.push({ ev: true, k: 'skip', ts: e.t, tour: t, e, ids: [...new Set([...ids, ...e.skipped.flatMap(f => [...f.b, ...f.g])])] });
       if (e.k === 'end') out.push({ ev: true, k: 'end', ts: e.t, tour: t, e, ids });
     });
   });
@@ -2773,6 +2798,9 @@ function tourEvents() {
 function tourEventItem(x) {
   const e = x.e;
   if (x.k === 'end') return `<div class="hevent">${icon('trophy')}<div class="grow"><b>Turnier beendet</b>${e.winners && e.winners.length ? `: Sieg für ${esc(e.winners.map(nameOf).join(' & '))}` : ''}</div><span class="mono dim">${fmtTime(x.ts)}</span></div>`;
+  if (x.k === 'skip') return `<div class="hevent">${icon('restore')}<div class="grow"><b>Turnier: Runde ${e.round - 1} abgebrochen, Runde ${e.round} ausgelost</b>
+    <div class="small muted" style="margin-top:3px">Nicht gewertet: ${esc(fxText(e.skipped))}</div>
+    <div class="small" style="margin-top:2px">Jetzt: ${esc(fxText(e.fx))}${e.rest && e.rest.length ? `, Pause: ${esc(e.rest.map(nameOf).join(', '))}` : ''}</div></div><span class="mono dim">${fmtTime(x.ts)}</span></div>`;
   return `<div class="hevent">${icon('restore')}<div class="grow"><b>Turnier: Runde ${e.round} neu ausgelost</b> <span class="muted">(${x.nth}. Auslosung dieser Runde)</span>
     <div class="small muted" style="margin-top:3px">Vorher: ${esc(fxText(e.prev))}${e.prevRest && e.prevRest.length ? `, Pause: ${esc(e.prevRest.map(nameOf).join(', '))}` : ''}</div>
     <div class="small" style="margin-top:2px">Jetzt: ${esc(fxText(e.fx))}${e.rest && e.rest.length ? `, Pause: ${esc(e.rest.map(nameOf).join(', '))}` : ''}</div></div><span class="mono dim">${fmtTime(x.ts)}</span></div>`;
@@ -2851,23 +2879,63 @@ function setLive(t, i, k, v) {
   tourWrite(t, { [`live.${liveKey(t, i)}`]: cur });
 }
 
-async function tourTx(tid, fn) {
+/* Eigene Änderungen sofort zeigen, auch wenn die Bestätigung vom Server noch unterwegs ist.
+   Jede Transaktion erhöht rev; sobald der Server einen Stand mit dieser rev liefert, entfällt die Vorschau. */
+const tourOverlay = new Map();
+function applyTourOverlay(list) {
+  if (!tourOverlay.size) return list;
+  const now = Date.now();
+  return list.map(t => {
+    const o = tourOverlay.get(t.id);
+    if (!o) return t;
+    if (now > o.until || (t.rev || 0) >= o.rev) { tourOverlay.delete(t.id); return t; }
+    return { ...t, ...o.patch };
+  });
+}
+function tourOptimistic(tid, patch) {
+  tourOverlay.set(tid, { patch, rev: patch.rev, until: Date.now() + 20000 });
+  S.toursRaw = applyTourOverlay(S.toursServer || S.toursRaw);
+  S.version++; scheduleRender();
+  setTimeout(() => { S.toursRaw = applyTourOverlay(S.toursServer || S.toursRaw); S.version++; scheduleRender(); }, 20500);
+}
+const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error('timeout'), { code: 'deadline-exceeded' })), ms))]);
+// Eigene Live-Spielstände erst ankommen lassen, sonst kollidieren sie mit der Transaktion
+async function settleWrites() {
+  if (!S.fs.waitForPendingWrites) return;
+  try { await withTimeout(S.fs.waitForPendingWrites(S.db), 2500); } catch { /* weiter, die Transaktion wiederholt sich notfalls selbst */ }
+}
+
+async function tourTx(tid, fn, opts = {}) {
   if (!requireDb()) return null;
   if (!navigator.onLine) { toast('Für Turniere wird eine Internetverbindung gebraucht.', 'error'); return null; }
   const { runTransaction, doc } = S.fs;
+  let committed = null;
   try {
-    return await runTransaction(S.db, async tx => {
+    const res = await runTransaction(S.db, async tx => {
+      committed = null;
       const ref = doc(S.db, 'tournaments', tid);
       const snap = await tx.get(ref);
       if (!snap.exists()) throw new Error('Turnier nicht gefunden.');
-      const out = fn({ id: tid, ...snap.data() }, tx);
+      const x = { id: tid, ...snap.data() };
+      const out = await fn(x, tx);
       if (!out) return null;
-      tx.update(ref, { ...out.patch, updatedAt: Date.now() });
+      if (out.patch) {
+        committed = { ...out.patch, rev: (x.rev || 0) + 1, updatedAt: Date.now() };
+        tx.update(ref, committed);
+      }
       return out.result ?? true;
     });
+    if (committed) tourOptimistic(tid, committed);
+    return res;
   } catch (err) {
-    const slow = /unavailable|deadline|aborted|failed-precondition/.test(String(err && err.code));
-    toast(err && err.userMsg ? err.userMsg : slow ? 'Die Verbindung war zu langsam. Bitte noch einmal versuchen.' : `Das hat nicht geklappt: ${errMsg(err)}`, err && err.level || 'error');
+    if (!err || !err.userMsg) {
+      // Antwort verloren? Dann nachsehen, ob es trotzdem angekommen ist
+      const ok = opts.verify && await opts.verify(err).catch(() => null);
+      if (ok) { if (committed) tourOptimistic(tid, committed); return ok; }
+      console.error('[Kicker] Turnier:', err);
+    }
+    const slow = /unavailable|deadline|aborted|failed-precondition|timeout/.test(String(err && err.code));
+    toast(err && err.userMsg ? err.userMsg : slow ? 'Keine Antwort vom Server. Bitte noch einmal versuchen.' : `Das hat nicht geklappt: ${errMsg(err)}`, err && err.level || 'error');
     return null;
   }
 }
@@ -2890,8 +2958,9 @@ function renderDyp() {
   const fx = t.fixtures || [];
   const anyDone = fx.some(f => f.done), allDone = fx.length && fx.every(f => f.done);
   const resting = (t.resting || []).filter(id => D().players.has(id));
+  const redraws = tourRedraws(t);
   let html = `<div class="card">
-    <div class="card-head"><div><h2>Turnier ${esc(tourLabel(t))}</h2><p class="sub">${t.round ? `Runde ${t.round}.` : 'Anwesende markieren, dann auslosen.'}${(() => { const n = (t.log || []).filter(e => e.k === 'redraw' && e.round === t.round).length; return n ? ` <span style="color:var(--amber)">${n}× neu ausgelost, siehe Verlauf.</span>` : ''; })()} Alle sehen live dasselbe.</p></div>
+    <div class="card-head"><div><h2>Turnier ${esc(tourLabel(t))}</h2><p class="sub">${t.round ? `Runde ${t.round}.` : 'Anwesende markieren, dann auslosen.'}${redraws.length ? ` <span style="color:var(--amber)">${redraws.length}× neu ausgelost.</span>` : ''} Alle sehen live dasselbe.</p></div>
       <button class="btn sm ghost" data-action="tourEnd">${icon('trophy')}Beenden</button></div>
     <div class="row" style="justify-content:space-between;margin-bottom:8px"><span class="section-t" style="margin:0">Dabei: ${present.size}</span>
       <span class="row"><button class="linkbtn" data-action="tourAll" data-v="1">Alle</button><span class="dim">|</span><button class="linkbtn" data-action="tourAll" data-v="0">Keiner</button></span></div>
@@ -2907,18 +2976,19 @@ function renderDyp() {
       </div>
     </div></div>`;
   if (fx.length) {
-    if (resting.length) html += `<div class="banner info">${icon('coffee')}<div class="grow"><strong>Pause in Runde ${t.round}:</strong> ${resting.map(id => esc(nameOf(id))).join(', ')}</div></div>`;
+    if (resting.length) html += `<div class="banner info">${icon('coffee')}<div class="grow"><strong ${tipAttr('Pause macht, wer in dieser Spielpause schon am meisten gespielt hat. Wer neu dazukommt, ist sofort dran.')}>Pause in Runde ${t.round}<span class="tipq">?</span>:</strong> ${resting.map(id => esc(nameOf(id))).join(', ')}</div></div>`;
     html += fx.map((f, i) => {
       const sc = f.done ? { sb: f.sb, sg: f.sg } : fxScore(t, i);
+      const lock = f.done || tourBusy.has(liveKey(t, i));
       const team = (cls, ids, k) => `<div class="fx-team ${cls}">
         <div class="pos"><span>Sturm</span>${esc(nameOf(ids[0]))}</div>
         <div class="pos"><span>Abwehr</span>${esc(nameOf(ids[1]))}</div>
         <div class="score-row"><span class="lbl">Tore</span><div class="stepper">
-          <button class="step" ${f.done ? 'disabled' : ''} data-action="tourScore" data-fx="${i}" data-k="${k}" data-d="-1" aria-label="Tor abziehen">−</button>
+          <button class="step" ${lock ? 'disabled' : ''} data-action="tourScore" data-fx="${i}" data-k="${k}" data-d="-1" aria-label="Tor abziehen">−</button>
           <output class="score">${sc[k]}</output>
-          <button class="step" ${f.done ? 'disabled' : ''} data-action="tourScore" data-fx="${i}" data-k="${k}" data-d="1" aria-label="Tor hinzufügen">+</button>
+          <button class="step" ${lock ? 'disabled' : ''} data-action="tourScore" data-fx="${i}" data-k="${k}" data-d="1" aria-label="Tor hinzufügen">+</button>
         </div></div>
-        ${f.done ? '' : `<button class="winbtn" data-action="tourWin" data-fx="${i}" data-k="${k}">Sieg ${S.league.target}</button>`}</div>`;
+        ${f.done ? '' : `<button class="winbtn" ${lock ? 'disabled' : ''} data-action="tourWin" data-fx="${i}" data-k="${k}">Sieg ${S.league.target}</button>`}</div>`;
       const pb = winProb(f.blue.map(ratingOf), f.green.map(ratingOf));
       return `<div class="card fixture ${f.done ? 'done' : ''}">
         <div class="row" style="justify-content:space-between"><h3>Runde ${t.round}, Spiel ${i + 1}</h3>
@@ -2936,8 +3006,15 @@ function renderDyp() {
         <td class="ctr mono">${e.n}</td><td class="ctr mono" style="color:var(--green)">${e.w}</td><td class="num" style="color:${e.gd >= 0 ? 'var(--green)' : 'var(--red)'}">${signed(e.gd)}</td></tr>`).join('')}
       </tbody></table></div></div>`;
   }
+  if (redraws.length) {
+    html += `<div class="card"><div class="card-head"><div><h3>Neu ausgelost</h3><p class="sub">Für alle sichtbar, auch im Verlauf.</p></div></div>
+      <div class="hist">${redraws.slice().reverse().map(e => `<div class="hevent">${icon('restore')}<div class="grow"><b>Runde ${e.k === 'redraw' ? e.round : e.round - 1}${e.k === 'redraw' ? ' neu ausgelost' : ' abgebrochen'}</b>
+        <div class="small muted" style="margin-top:3px">Vorher: ${esc(fxText(e.k === 'redraw' ? e.prev : e.skipped))}</div></div><span class="mono dim">${fmtTime(e.t)}</span></div>`).join('')}</div></div>`;
+  }
   box.innerHTML = html;
 }
+// Neuauslosungen und abgebrochene Runden (Nächste Runde, obwohl noch Spiele offen waren)
+const tourRedraws = t => (t.log || []).filter(e => e.k === 'redraw' || (e.k === 'draw' && e.skipped && e.skipped.length));
 
 async function tourNew() {
   if (!requireDb()) return;
@@ -2954,6 +3031,14 @@ async function tourNew() {
   S.tourSel = ref.id; store.set('tourSel', S.tourSel);
 }
 
+// Letzte Auslosung (ältere Turniere ohne drawnAt: letztes Protokoll oder letztes gewertetes Spiel)
+function tourLastAt(x) {
+  if (x.drawnAt) return x.drawnAt;
+  const logT = Math.max(0, ...(x.log || []).filter(e => e.k === 'draw' || e.k === 'redraw').map(e => e.t || 0));
+  if (logT) return logT;
+  const known = new Map(D().all.map(m => [m.id, m.ts]));
+  return Math.max(0, ...(x.results || []).map(r => known.get(r.matchId) || 0));
+}
 function drawPatch(t, base, fair) {
   const ids = tourPresent(t);
   if (ids.length < 4) throw userErr('Mindestens vier Anwesende auswählen.');
@@ -2963,19 +3048,31 @@ function drawPatch(t, base, fair) {
 }
 async function tourDraw() {
   const t = curTour(); if (!t) return;
-  if ((t.fixtures || []).some(f => !f.done)) {
-    const ok = await ask({ title: 'Nächste Runde auslosen?', msg: 'In der aktuellen Runde sind noch Spiele offen. Diese werden nicht gewertet.', ok: 'Trotzdem auslosen', danger: true });
-    if (!ok) return;
-  }
   const round = t.round;
-  const res = await tourTx(t.id, x => {
-    if (x.round !== round) throw userErr('Inzwischen hat schon jemand anderes ausgelost.');
-    const prev = { rest: x.rest || {}, pair: x.pair || {}, opp: x.opp || {}, played: x.played || {}, resting: x.resting || [] };
-    const dp = drawPatch(x, prev, x.mode !== 'random');
-    const log = [...(x.log || []), { k: 'draw', t: Date.now(), round: x.round + 1, fx: compactFx(dp.fixtures), rest: dp.resting }];
-    return { patch: { ...dp, round: x.round + 1, prev, log } };
-  });
-  if (res) toast(`Runde ${round + 1} ausgelost.`, 'success');
+  let skipOk = false;
+  for (;;) {
+    // Ob noch Spiele offen sind, entscheidet der Stand auf dem Server, nicht der vielleicht ältere auf diesem Handy
+    const res = await tourTx(t.id, x => {
+      if (x.round !== round) throw userErr('Inzwischen hat schon jemand anderes ausgelost.');
+      const open = (x.fixtures || []).filter(f => !f.done);
+      if (open.length && !skipOk) return { patch: null, result: { open } };
+      const now = Date.now();
+      const { fresh, ...base } = tourBase(x, now, tourLastAt(x));
+      const dp = drawPatch(x, base, x.mode !== 'random');
+      const entry = { k: 'draw', t: now, round: x.round + 1, fx: compactFx(dp.fixtures), rest: dp.resting };
+      if (open.length) entry.skipped = compactFx(open);
+      return { patch: { ...dp, round: x.round + 1, prev: base, drawnAt: now, log: [...(x.log || []), entry] }, result: { round: x.round + 1 } };
+    });
+    if (!res) return;
+    if (res.open) {
+      const one = res.open.length === 1;
+      const ok = await ask({ title: 'Nächste Runde auslosen?', msg: `Noch nicht gewertet: ${fxText(compactFx(res.open))}. ${one ? 'Dieses Spiel fällt' : 'Diese Spiele fallen'} weg.`, ok: 'Trotzdem auslosen', danger: true });
+      if (!ok) return;
+      skipOk = true; continue;
+    }
+    toast(`Runde ${res.round} ausgelost.`, 'success');
+    return;
+  }
 }
 async function tourRedraw() {
   const t = curTour(); if (!t) return;
@@ -2985,12 +3082,15 @@ async function tourRedraw() {
     if ((x.fixtures || []).some(f => f.done)) throw userErr('In dieser Runde ist schon ein Spiel gewertet.');
     if (!x.prev) throw userErr('Diese Runde lässt sich nicht neu auslosen.');
     const dp = drawPatch(x, x.prev, x.mode !== 'random');
+    dp.drawnAt = Date.now();
     // Neuauslosen bleibt erlaubt, wird aber mit alter und neuer Paarung protokolliert (sichtbar im Verlauf)
     const log = [...(x.log || []), { k: 'redraw', t: Date.now(), round: x.round, prev: compactFx(x.fixtures), prevRest: x.resting || [], fx: compactFx(dp.fixtures), rest: dp.resting }];
     return { patch: { ...dp, log } };
   });
   if (res) toast(`Runde ${round} neu ausgelost.`, 'success');
 }
+// Feste Kennung je Paarung: Doppelt abgeschickt oder Antwort verloren ergibt nie zwei Spiele
+const tourMatchId = (tid, draw, i, undo) => `${tid}_${draw}_${i}${undo ? '_' + undo : ''}`;
 async function tourSubmit(i) {
   const t = curTour(); if (!t) return;
   const f = (t.fixtures || [])[i]; if (!f || f.done) return;
@@ -3004,27 +3104,45 @@ async function tourSubmit(i) {
   }
   const draw = drawKey(t);
   const { doc, collection, serverTimestamp } = S.fs;
-  const mref = doc(collection(S.db, 'matches'));
+  let mref = null;
   tourBusy.add(busyKey); renderDyp();
-  const res = await tourTx(t.id, (x, tx) => {
+  await settleWrites();
+  const res = await tourTx(t.id, async (x, tx) => {
     const fx = (x.fixtures || []).map(z => ({ ...z }));
     if (drawKey(x) !== draw || !fx[i]) throw userErr('Die Runde wurde gerade auf einem anderen Handy neu ausgelost. Bitte die Paarung prüfen.');
-    if (fx[i].done) throw userErr(`Dieses Spiel ist schon gewertet (${fx[i].sb} : ${fx[i].sg}).`, 'info');
+    mref = doc(S.db, 'matches', tourMatchId(x.id, draw, i, fx[i].undo));
+    if (fx[i].done) {
+      // Schon drin, mit demselben Ergebnis (eigener früherer Versuch oder anderes Handy): kein Fehler
+      if (fx[i].sb === sb && fx[i].sg === sg) return { patch: null, result: { sb, sg, again: fx[i].matchId !== mref.id } };
+      throw userErr(`Dieses Spiel ist schon gewertet (${fx[i].sb} : ${fx[i].sg}).`, 'info');
+    }
+    const old = await tx.get(mref);
+    if (old.exists()) mref = doc(collection(S.db, 'matches')); // Reste eines zurückgenommenen Eintrags
     const m = { ...buildMatch(fx[i].blue, fx[i].green, sb, sg, 'dyp'), tournamentId: x.id, deviceId, voided: false, schema: 2, createdAt: serverTimestamp() };
     tx.set(mref, m);
     fx[i] = { ...fx[i], done: true, matchId: mref.id, sb, sg };
-    return { patch: { fixtures: fx, results: [...(x.results || []), { matchId: mref.id, blue: fx[i].blue, green: fx[i].green, sb, sg }] } };
+    return { patch: { fixtures: fx, results: [...(x.results || []).filter(r => r.matchId !== mref.id), { matchId: mref.id, blue: fx[i].blue, green: fx[i].green, sb, sg }] }, result: { sb, sg } };
+  }, {
+    verify: async () => {
+      if (!mref || !S.fs.getDocFromServer) return null;
+      const snap = await withTimeout(S.fs.getDocFromServer(mref), 5000);
+      if (!snap.exists() || snap.data().voided) return null;
+      const d = snap.data();
+      return { sb: d.scoreBlue, sg: d.scoreGreen };
+    }
   });
   tourBusy.delete(busyKey); renderDyp();
   if (!res) return;
-  S.pendingHi = mref.id;
+  if (res.again) { toast(`Schon gewertet: ${res.sb} : ${res.sg}.`, 'success'); return; }
+  const mid = mref.id, tid = t.id;
+  S.pendingHi = mid;
   chime();
-  toast(`Gewertet: ${sb} : ${sg}.`, 'success', { action: { label: 'Rückgängig', run: () => tourUndo(t.id, mref.id) } });
+  toast(`Gewertet: ${res.sb} : ${res.sg}.`, 'success', { action: { label: 'Rückgängig', run: () => tourUndo(tid, mid) } });
 }
 async function tourUndo(tid, matchId) {
   setVoided(matchId, true);
   await tourTx(tid, x => {
-    const fx = (x.fixtures || []).map(f => f.matchId === matchId ? { ...f, done: false, matchId: null } : f);
+    const fx = (x.fixtures || []).map(f => f.matchId === matchId ? { ...f, done: false, matchId: null, undo: (f.undo || 0) + 1 } : f);
     return { patch: { fixtures: fx, results: (x.results || []).filter(r => r.matchId !== matchId) } };
   });
   toast('Spiel annulliert.', 'info');
@@ -3565,6 +3683,7 @@ setInterval(() => { if (S.loaded.players && S.loaded.matches && document.visibil
   if (S.isAdmin) setAdmin(true);
   initFirebase();
 })();
+
 
 </script>
 </body>
