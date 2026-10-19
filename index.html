@@ -15,7 +15,11 @@
 <link href="https://fonts.googleapis.com/css2?family=B612+Mono:wght@400;700&family=B612:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <style>
-/* ---------- Tokens ---------- */
+/* =====================================================================
+   TEIL 1: DESIGN. Farben und Schriften zentral in :root (Tokens),
+   danach je Bereich der App ein Abschnitt. Programm: siehe <script> unten.
+   ===================================================================== */
+/* ---------- Farben & Maße (Tokens) ---------- */
 :root{
   --panel-0:#131b26;      /* Grundfläche, Cockpit-Panelgrau */
   --panel-1:#1a2432;      /* Karten */
@@ -78,7 +82,7 @@ svg.i{width:1.1em;height:1.1em;flex:none;stroke:currentColor;fill:none;stroke-wi
 :focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
 
-/* ---------- Header ---------- */
+/* ---------- Kopfzeile ---------- */
 .topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:rgba(19,27,38,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .wrap{max-width:980px;margin:0 auto;padding:0 16px;position:relative;z-index:1}
 .brandrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0 8px}
@@ -125,7 +129,7 @@ h3{font-family:var(--display);font-size:15.5px;font-weight:700;margin:0}
 .row.wrap-ok{flex-wrap:wrap}
 .spacer{flex:1}
 
-/* ---------- Controls ---------- */
+/* ---------- Bedienelemente ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 16px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--panel-2);color:var(--text);font-weight:600;font-size:14px;transition:transform .08s,background .15s,border-color .15s;white-space:nowrap}
 .btn:hover{border-color:#40546f}
 .btn:active{transform:scale(.97)}
@@ -196,9 +200,9 @@ dialog [data-tip]{cursor:help}
 .display{background:var(--screen);border:1px solid var(--screen-edge);border-radius:10px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.55),inset 0 6px 22px rgba(0,0,0,.55);font-family:var(--mono);color:var(--white)}
 .dlbl{font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--cyan)}
 
-/* ---------- Match entry ---------- */
+/* ---------- Spiel eintragen ---------- */
 .teams{display:grid;gap:12px}
-@media (min-width:760px){.teams{grid-template-columns:1fr 1fr}}
+@media (min-width:760px){.teams{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 .team{border-radius:var(--r-lg);padding:14px;border:1px solid;display:grid;gap:11px;position:relative}
 .team.blue{background:linear-gradient(180deg,rgba(75,147,255,.10),rgba(75,147,255,.02) 60%);border-color:rgba(75,147,255,.35)}
 .team.green{background:linear-gradient(180deg,rgba(47,208,142,.10),rgba(47,208,142,.02) 60%);border-color:rgba(47,208,142,.33)}
@@ -217,7 +221,7 @@ dialog [data-tip]{cursor:help}
 .team select option{color:var(--text);background:var(--panel-1);font-family:var(--font)}
 .team .field-label{font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--cyan);font-weight:400}
 .team .field-label .linkbtn{font-family:var(--font);letter-spacing:0;text-transform:none;font-size:12px}
-.score-unit{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:stretch}
+.score-unit{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:stretch}
 .lsk{width:50px;border-radius:8px;border:1px solid #3a4a60;background:linear-gradient(180deg,#2b394d,#1f2a3a);box-shadow:0 2px 0 #0d131c,inset 0 1px 0 rgba(255,255,255,.06);font-size:22px;font-weight:700;color:var(--white)}
 .lsk:active{transform:translateY(2px);box-shadow:0 0 0 #0d131c}
 .score-screen{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;min-height:66px}
@@ -234,7 +238,7 @@ dialog [data-tip]{cursor:help}
 .score{width:64px;text-align:center;font-family:var(--mono);font-weight:700;font-size:40px;line-height:1}
 .team.blue .score{color:#8dbbff}
 .team.green .score{color:#7ee9bd}
-.chips{display:grid;grid-template-columns:repeat(11,1fr);gap:4px}
+.chips{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:4px}
 .chip{min-height:32px;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--muted);font-family:var(--mono);font-size:13px;padding:0}
 .chip[aria-pressed="true"]{color:#061a20;background:var(--cyan);border-color:var(--cyan);font-weight:700}
 .team.blue .chip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
@@ -256,7 +260,7 @@ dialog [data-tip]{cursor:help}
 .instr-foot .hint{color:var(--white)}
 #probText{color:var(--magenta);font-size:14px}
 .actions{display:grid;gap:8px;margin-top:14px}
-@media (min-width:640px){.actions{grid-template-columns:auto auto 1fr}}
+@media (min-width:640px){.actions{grid-template-columns:auto auto minmax(0,1fr)}}
 
 .last-match .lm-body{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
 .lm-teams{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;flex:1;min-width:0}
@@ -271,9 +275,9 @@ dialog [data-tip]{cursor:help}
 .delta.up{color:var(--green)} .delta.down{color:var(--red)}
 .scorepill{font-family:var(--mono);font-weight:700;font-size:20px;padding:6px 12px;border-radius:10px;background:var(--panel-0);border:1px solid var(--line);white-space:nowrap}
 
-/* ---------- Leaderboard ---------- */
+/* ---------- Rangliste ---------- */
 .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.podium{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-items:end;margin-bottom:14px}
+.podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:end;margin-bottom:14px}
 .pod{border-radius:var(--r-md);padding:12px 8px 10px;text-align:center;border:1px solid var(--line);background:var(--panel-0);cursor:pointer;display:grid;gap:5px;justify-items:center;color:inherit}
 .pod:hover{border-color:#40546f}
 .pod .place{font-family:var(--mono);font-size:12px;color:var(--muted)}
@@ -316,19 +320,19 @@ tr.clickable:hover td{background:rgba(255,255,255,.025)}
 .empty{padding:28px 12px;text-align:center;color:var(--muted);font-size:14px}
 .empty .btn{margin-top:12px}
 
-/* ---------- Insights ---------- */
-.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-@media (min-width:640px){.kpis{grid-template-columns:repeat(4,1fr)}}
+/* ---------- Statistik ---------- */
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (min-width:640px){.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .kpi{background:var(--panel-0);border:1px solid var(--line);border-radius:var(--r-md);padding:11px 12px}
 .kpi .v{font-family:var(--mono);font-size:22px;font-weight:700}
 .kpi .k{font-size:12.5px;color:var(--muted)}
 .sidebar{margin-top:14px}
 .sidebar .bar{height:10px;border-radius:5px;overflow:hidden;display:flex;background:var(--panel-2);margin:7px 0 5px}
 .sidebar .bar .b{background:var(--blue)} .sidebar .bar .g{background:var(--green);flex:1}
-.records{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.records{display:grid;gap:8px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 @media (max-width:859px){.records>.rec:last-child:nth-child(odd){grid-column:1/-1}}
 @media (max-width:559px){.rec{padding:11px 12px}.rec .rv{font-size:14.5px}.rec .rm{font-size:12.5px}.rec .rh{font-size:12.5px}}
-@media (min-width:860px){.records{grid-template-columns:1fr 1fr 1fr}}
+@media (min-width:860px){.records{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}}
 .rec{background:var(--panel-1);border:1px solid var(--line);border-radius:var(--r-md);padding:13px 14px;display:grid;gap:3px;position:relative}
 .rec .rh{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--muted)}
 .rec .rh svg.i{color:var(--c,var(--cyan))}
@@ -375,9 +379,9 @@ button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 
 /* ---------- Ehrentafel & Vergleich ---------- */
 .fame{display:grid;gap:14px}
-@media (min-width:700px){.fame{grid-template-columns:1fr 1.6fr}}
+@media (min-width:700px){.fame{grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)}}
 .fame-list{display:grid;gap:6px}
-.fame-it{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:9px 11px;border-radius:var(--r-md);background:var(--panel-0);border:1px solid var(--line);font-size:14px;cursor:pointer;color:inherit;text-align:left;width:100%}
+.fame-it{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 11px;border-radius:var(--r-md);background:var(--panel-0);border:1px solid var(--line);font-size:14px;cursor:pointer;color:inherit;text-align:left;width:100%}
 .fame-it:hover{border-color:#40546f}
 .fame-it .per{font-family:var(--mono);font-size:12px;color:var(--muted);min-width:70px}
 .fame-it .who{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -385,9 +389,9 @@ button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 .fame-it.live{border-style:dashed}
 .fame-it.live .per{color:var(--cyan)}
 .fame-it.champ{border-color:rgba(63,208,224,.4)}
-.cmp-pick{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:14px}
+.cmp-pick{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center;margin-bottom:14px}
 .cmp-vs{font-size:13px;color:var(--muted)}
-.cmp-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:0;font-size:14px}
+.cmp-grid{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:0;font-size:14px}
 .cmp-grid>div{padding:8px 4px;border-bottom:1px solid var(--line-soft)}
 .cmp-grid .k{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 10px}
 .cmp-grid .a{text-align:left;font-family:var(--mono)}
@@ -400,10 +404,10 @@ button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:4px}
 .legend i{display:inline-block;width:12px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
 
-/* ---------- History ---------- */
+/* ---------- Verlauf ---------- */
 .dayhead{font-family:var(--display);font-size:13px;color:var(--muted);margin:10px 2px 6px;display:flex;justify-content:space-between}
 .hist{display:grid;gap:6px}
-.hitem{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:10px 12px;background:var(--panel-1);border:1px solid var(--line);border-radius:var(--r-md);font-size:14px;position:relative}
+.hitem{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;padding:10px 12px;background:var(--panel-1);border:1px solid var(--line);border-radius:var(--r-md);font-size:14px;position:relative}
 .hitem.voided{opacity:.5}
 .hitem.voided .scorepill{text-decoration:line-through}
 .hitem .side{display:grid;gap:2px;min-width:0}
@@ -427,8 +431,8 @@ button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 .pchip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel-0);color:var(--muted);font-size:14px;font-weight:600}
 .pchip[aria-pressed="true"]{background:var(--cyan-dim);color:var(--cyan);border-color:rgba(63,208,224,.45)}
 .fixture{display:grid;gap:10px}
-.fx-teams{display:grid;gap:8px;grid-template-columns:1fr}
-@media (min-width:600px){.fx-teams{grid-template-columns:1fr 1fr}}
+.fx-teams{display:grid;gap:8px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:600px){.fx-teams{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 .fx-team{border:1px solid;border-radius:var(--r-md);padding:11px;display:grid;gap:8px}
 .fx-team.blue{border-color:rgba(75,147,255,.35);background:var(--blue-dim)}
 .fx-team.green{border-color:rgba(47,208,142,.33);background:var(--green-dim)}
@@ -441,7 +445,7 @@ button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 /* ---------- Verlauf: Prognose, Details, Turnier-Ereignisse ---------- */
 .hcenter{display:grid;justify-items:center;gap:3px}
 .hprob{font-size:11px;color:var(--muted);white-space:nowrap}
-.hdetails{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;background:var(--panel-0);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px}
+.hdetails{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 14px;background:var(--panel-0);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px}
 .hd-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:3px 0}
 .hd-name{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .hd-pos{display:block;font-size:11.5px;color:var(--dim)}
@@ -452,7 +456,7 @@ button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 
 /* ---------- Direktvergleich ---------- */
 .vs{padding:16px}
-.vs-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.vs-top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px}
 .vs-side{display:grid;justify-items:start;gap:4px;min-width:0}
 .vs-side.r{justify-items:end;text-align:right}
 .vs-name{font-family:var(--font);font-weight:700;font-size:15px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -460,7 +464,7 @@ button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 .vs-mid{text-align:center}
 .vs-score{font-size:34px;font-weight:700;line-height:1.1;white-space:nowrap}
 .vs-score .lead{color:var(--green)}
-.vs-lead{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.vs-lead{grid-column:1/-1;text-align:center;margin-top:-4px;overflow-wrap:anywhere;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .vs-dots{display:flex;justify-content:center;gap:5px;margin-top:12px}
 .vs-dots i{width:14px;height:14px;border-radius:4px;display:block}
 .vs-dots i.a{background:#3fd0e0} .vs-dots i.b{background:#f3f6fa}
@@ -473,7 +477,7 @@ button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 .mp{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:4px 10px;border-radius:9px;border:1px solid var(--line);background:var(--panel-0);color:var(--muted)}
 .mp b{color:var(--text);font-family:var(--mono)}
 .mp.gold{border-color:rgba(255,182,39,.5)} .mp.gold b{color:var(--amber)}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.two-col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
 .mini-it{display:flex;justify-content:space-between;gap:8px;width:100%;padding:7px 10px;margin-bottom:5px;border-radius:9px;border:1px solid var(--line);background:var(--panel-0);color:inherit;font-size:13.5px;text-align:left}
 .mini-it span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;min-width:0}
 .mini-it span:last-child{flex:none;white-space:nowrap}
@@ -485,10 +489,11 @@ button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 .tour-it.on{border-color:rgba(63,208,224,.5);background:var(--cyan-dim)}
 .fx-team .winbtn{justify-self:end}
 
-/* ---------- Profile ---------- */
-.prof-head{display:flex;gap:12px;align-items:center}
-.stats4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.stats4 .kpi{padding:9px 8px;text-align:center}
+/* ---------- Spielerprofil ---------- */
+.prof-head{display:flex;gap:12px;align-items:center;min-width:0;flex:1}
+.prof-head h3{white-space:normal!important;overflow-wrap:anywhere;line-height:1.2}
+.stats4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.stats4 .kpi{padding:9px 3px;text-align:center}
 .stats4 .kpi .v{font-size:16px}
 .stats4 .kpi .k{font-size:11.5px}
 .h2h{display:grid;gap:6px}
@@ -498,7 +503,7 @@ button.brow:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 .posbar i{display:block;height:100%;border-radius:4px}
 .section-t{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 7px}
 
-/* ---------- Dialogs ---------- */
+/* ---------- Dialoge ---------- */
 dialog{border:1px solid var(--line);border-radius:20px;background:var(--panel-1);color:var(--text);padding:0;width:min(460px,calc(100vw - 24px));max-height:calc(100dvh - 32px);overflow:hidden}
 dialog.wide{width:min(560px,calc(100vw - 24px))}
 dialog::backdrop{background:rgba(5,9,15,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
@@ -506,7 +511,7 @@ dialog[open]{animation:pop .18s ease-out}
 @keyframes pop{from{transform:translateY(8px) scale(.985);opacity:0}}
 .dlg{display:flex;flex-direction:column;max-height:calc(100dvh - 34px)}
 .dlg-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px 12px}
-.dlg-body{padding:0 18px 16px;overflow-y:auto;display:grid;gap:14px}
+.dlg-body{padding:0 18px 16px;overflow-y:auto;display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
 .dlg-foot{display:flex;gap:8px;padding:12px 18px 16px;border-top:1px solid var(--line-soft)}
 .dlg-foot .btn{flex:1}
 .x-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);color:var(--muted);display:grid;place-items:center}
@@ -519,6 +524,17 @@ dialog[open]{animation:pop .18s ease-out}
 .switch input:checked{background:var(--cyan-dim);border-color:var(--cyan)}
 .switch input:checked::after{left:20px;background:var(--cyan)}
 .err-text{color:var(--red);font-size:13px;min-height:18px}
+
+/* ---------- Lange Namen ----------
+   Namen dürfen bis zu 30 Zeichen haben. Nichts darf dadurch breiter als der Bildschirm werden:
+   Raster- und Flex-Elemente dürfen schrumpfen, Namen in Listen werden mit … gekürzt,
+   Überschriften und Rekordhalter umbrechen. */
+.two-col>*,.kpis>*,.records>*,.stats4>*,.fame>*,.fx-teams>*,.teams>*,.hdetails>*,.dlg-head>*{min-width:0}
+.h2h .it>:first-child,.fx-team .pos{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec .rv,.banner .grow,.hevent .grow{overflow-wrap:anywhere;min-width:0}
+.kpi .v,.kpi .k{overflow-wrap:break-word}
+.kpis.tight .kpi{padding:9px 7px}.kpis.tight .kpi .k{font-size:11.5px}
+@media (max-width:440px){.two-col{grid-template-columns:minmax(0,1fr)}}
 
 /* ---------- Toasts ---------- */
 .toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:100;display:grid;gap:8px;width:min(440px,calc(100vw - 24px));pointer-events:none}
@@ -548,6 +564,11 @@ body[data-mode="1v1"] .only2v2{display:none!important}
 </style>
 </head>
 <body>
+<!-- =====================================================================
+     TEIL 2: SEITENGERÜST. Symbole (SVG), Kopfzeile, die fünf Reiter
+     (Spiel, Rangliste, Statistik, Verlauf, DYP) und die Dialoge.
+     Gefüllt wird das meiste erst vom Programm (Teil 3).
+     ===================================================================== -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <symbol id="i-lf1" viewBox="0 0 64 34"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="stroke-width:var(--zw,1.4)">
@@ -805,7 +826,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
     </div>
   </section>
 
-  <!-- ============ FLUGBUCH ============ -->
+  <!-- ============ VERLAUF ============ -->
   <section class="view" id="view-history" role="tabpanel" hidden>
     <div class="card">
       <div class="card-head">
@@ -912,18 +933,48 @@ body[data-mode="1v1"] .only2v2{display:none!important}
 
 <script type="module">
 /* =====================================================================
-   IFL Kicker Liga
+   TEIL 3: PROGRAMM, IFL Kicker Liga
    ---------------------------------------------------------------------
-   Datenmodell (Firestore):
-     players/{id}  { name, createdAt, archived }
-     matches/{id}  { mode, timestamp, blueIds, greenIds, blueNames, greenNames,
-                     bluePositions, greenPositions, scoreBlue, scoreGreen, winner,
-                     source, deviceId, voided, createdAt }
+   Eine einzige Datei: oben das Design (<style>), dann das Seitengerüst
+   (HTML), hier das Programm. Ausführliche Beschreibung in README.md.
+
+   INHALT (zum Springen nach "---- Name" suchen)
+     Zugang & Konfiguration  Firebase-Zugang, Admin-Passwort, CFG
+     Helfer ............... kleine Werkzeuge (Datum, Text, Speicher)
+     Wertung .............. TrueSkill-Variante, Prognosen, Durchmarsch
+     Positionen-Logik ..... Sturm/Abwehr-Auswertung, Tausch-Tipp
+     Schachtitel, Turniertabelle, Abzeichen, Ergebnisprüfung
+     DYP-Auslosung ........ wer pausiert, wer mit wem (siehe auch tourBase)
+     Zustand .............. zentrales Objekt S
+     Daten normalisieren .. Rangliste, Zeiträume, Ehrentafel aus den Spielen
+     Vorschau-Modus ....... ?vorschau: läuft mit Backup, ohne Datenbank
+     Firebase ............. Anmelden, Abgleich, Schreiben
+     Ton, Info-Blasen, Toasts & Dialoge, Rendering-Steuerung
+     Spiel eintragen
+     Rangliste, Statistik, Positionen-Karte, Ehrentafel, Direktvergleich, Verlauf
+     DYP-Turniere
+     Spielerprofil, Spieler verwalten, Admin, Einstellungen & Backup, QR
+     Ereignisse ........... welcher Knopf was auslöst (ACTIONS)
+     Start
+
+   DATENMODELL (Firestore)
+     players/{id}      { name, archived, createdAt }
+     matches/{id}      { mode '1v1'|'2v2', timestamp, blueIds, greenIds,
+                         blueNames, greenNames, bluePositions, greenPositions,
+                         scoreBlue, scoreGreen, winner, target, winBy, cap,
+                         source 'manual'|'dyp', tournamentId?, deviceId,
+                         voided, voidedAt?, createdAt }
+     tournaments/{id}  { status 'open'|'done', present, mode, round, fixtures,
+                         resting, played, rest, pair, opp, prev, results, live,
+                         drawId, drawnAt, rev, log, winners, createdAt, updatedAt }
+     config/league     { target, winBy, cap }   Spielregeln der Liga
    Die Wertung wird NICHT gespeichert, sondern bei jedem Laden aus allen
    gültigen Spielen neu berechnet. Dadurch bleibt alles konsistent, auch wenn
    Spiele annulliert werden oder zwei Handys gleichzeitig eintragen.
+   Gelöscht wird nie: Spiele werden annulliert, Spieler archiviert.
    ===================================================================== */
 
+/* ---------------- Zugang & Konfiguration ---------------- */
 const FIREBASE_VERSION = '11.6.1';
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyADeR4Y8ARc_74Yjw6UTLa7jtO33Q3x4rE",
@@ -949,7 +1000,7 @@ const CFG = {
   nameMax: 30,
   histPage: 40,
   fameMinGames: 4,   // Mindestspiele im Monat/in der Saison für einen Titel
-  appVersion: '2.5.1'
+  appVersion: '2.5.3'
 };
 
 /* ---------------- Helfer ---------------- */
@@ -1011,10 +1062,6 @@ function initials(name) {
 }
 function avatar(name, cls = '') {
   return `<div class="avatar ${cls}" style="background:${avatarColor(name)}" aria-hidden="true">${esc(initials(name))}</div>`;
-}
-function shuffle(a) {
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-  return a;
 }
 
 /* ---------------- Wertung (TrueSkill-Variante) ----------------
@@ -1203,7 +1250,7 @@ function replay(matches) {
 /* Knapp = Abstand höchstens 40 % der Siegtore (5:3, 6:4, 7:5, 7:6 knapp; 5:2, 7:4 deutlich) */
 const isClose = (a, b) => Math.abs(a - b) / Math.max(a, b, 1) <= 0.4;
 
-/* ---------------- Positionen ----------------
+/* ---------------- Positionen-Logik ----------------
    Reine Siegquoten pro Position täuschen (Partner, Gegner). Deshalb zählt,
    wie viele Siege jemand im Sturm bzw. in der Abwehr MEHR geholt hat als
    vor dem Spiel zu erwarten war. Wenig Daten werden zur Mitte gezogen. */
@@ -1273,8 +1320,8 @@ function badges(r, titles) {
   ];
 }
 
-/* Passt ein Ergebnis zu "gespielt bis T"? Verlängerung mit 2 Toren Vorsprung ist erlaubt. */
-/* Liga-Regeln: bis target, mit winBy Toren Vorsprung, höchstens bis cap (0 = ohne Deckel).
+/* ---------------- Ergebnisprüfung ----------------
+   Liga-Regeln: bis target, mit winBy Toren Vorsprung, höchstens bis cap (0 = ohne Deckel).
    Beispiel bis 5, 2 Abstand, max 7: gültig sind 5:0…5:3, 6:4, 7:5 und 7:6. */
 function plausibleScore(sb, sg, rules) {
   const R = typeof rules === 'number' ? { target: rules, winBy: 2, cap: 0 } : (rules || {});
@@ -1288,8 +1335,9 @@ function plausibleScore(sb, sg, rules) {
   return w - l === by;                                    // Verlängerung: genau mit Vorsprung beendet
 }
 
-/* DYP: lost eine Runde. Pausieren muss, wer bisher am seltensten pausiert hat
-   (und möglichst nicht zweimal hintereinander). Unter vielen Zufallsaufteilungen
+/* ---------------- DYP-Auslosung ----------------
+   Lost eine Runde. Pausieren muss, wer in dieser Spielpause schon am meisten gespielt hat
+   (bei Gleichstand nicht zweimal hintereinander). Unter vielen Zufallsaufteilungen
    wird die mit den wenigsten wiederholten Partnern/Gegnern gewählt, im Modus
    "ausgeglichen" zusätzlich die mit den knappsten Prognosen. */
 function planRound(ids, st, fair, rOf, rnd = Math.random) {
@@ -1427,6 +1475,22 @@ function derive() {
 
 const D = () => derive();
 const nameOf = id => D().players.get(id)?.name || '?';
+/* Namen kürzen, wo es eng ist. Schrittweise, solange es nicht passt:
+   "Henning Wolfgang Derrek Dahmen" → "Henning W. D. Dahmen" → "Henning Dahmen" → "Henning D."
+   Vollständig bleibt der Name im Profil, in den Spieldetails, in Auswahllisten und beim Drüberfahren. */
+function shortName(name, n = 16, ell = '…') {
+  const s = String(name).replace(/\s+/g, ' ').trim();
+  if (s.length <= n) return s;
+  const p = s.split(' ');
+  if (p.length > 1) {
+    const first = p[0], last = p[p.length - 1], mid = p.slice(1, -1);
+    const forms = [[first, ...mid.map(x => x[0] + '.'), last].join(' '), `${first} ${last}`, `${first} ${last[0]}.`, `${first[0]}. ${last}`];
+    for (const f of forms) if (f.length <= n) return f;
+  }
+  return s.slice(0, n - ell.length) + ell;
+}
+const nameS = id => shortName(nameOf(id));
+const nameTag = (id, cls = '') => `<span ${cls ? `class="${cls}" ` : ''}title="${esc(nameOf(id))}">${esc(nameS(id))}</span>`;
 const ratingOf = id => D().full.R.get(id) || fresh();
 const activePlayers = () => [...D().players.values()].filter(p => !p.archived);
 
@@ -1532,7 +1596,6 @@ function rankList(rep, filter, period) {
     .sort((a, b) => (disp(b.r) - disp(a.r)) || (b.r.games - a.r.games) || collator.compare(a.p.name, b.p.name));
 }
 
-/* ---------------- Firebase ---------------- */
 /* ---------------- Vorschau-Modus ----------------
    Mit ?vorschau in der Adresse verbindet sich die App nicht mit Firebase, sondern lädt
    ein Backup in den Speicher. Alles lässt sich ausprobieren, nichts wird gespeichert. */
@@ -1608,6 +1671,8 @@ function startPreview() {
   renderStatus();
 }
 
+/* ---------------- Firebase ----------------
+   Anmeldung (anonym), Abgleich der Sammlungen und alle Schreibvorgänge. */
 async function initFirebase() {
   if (PREVIEW) { startPreview(); return; }
   renderStatus();
@@ -2113,7 +2178,7 @@ function renderQuickPick() {
   const lbl = { b1: S.mode === '2v2' ? 'Blau vorn' : 'Blau', b2: 'Blau hinten', g1: S.mode === '2v2' ? 'Grün vorn' : 'Grün', g2: 'Grün hinten' };
   box.innerHTML = `<div class="qp-head"><span class="dlbl">Zuletzt dabei</span>${quickSlots().some(s => S.sel[s]) ? '<button class="linkbtn" data-action="qpClear">Leeren</button>' : ''}</div>
     <div class="qp-list">${list.map(({ p }) => { const s = slotOf(p.id);
-      return `<button class="qp ${s ? 'on ' + s[0] : ''}" data-action="qp" data-pid="${esc(p.id)}" aria-pressed="${!!s}">${esc(p.name)}${s ? `<small>${lbl[s]}</small>` : ''}</button>`; }).join('')}</div>`;
+      return `<button class="qp ${s ? 'on ' + s[0] : ''}" data-action="qp" data-pid="${esc(p.id)}" aria-pressed="${!!s}" title="${esc(p.name)}">${esc(shortName(p.name))}${s ? `<small>${lbl[s]}</small>` : ''}</button>`; }).join('')}</div>`;
 }
 function quickPick(pid) {
   const cur = quickSlots().find(s => S.sel[s] === pid);
@@ -2260,7 +2325,7 @@ function renderLastMatch() {
   const per = D().full.per.get(m.id);
   const side = (ids, won, right) => `<div class="lm-side ${right ? 'r' : ''}">${ids.map(id => {
     const d = per?.deltas[id] ?? 0;
-    const nm = `<span class="who" style="color:${won ? 'var(--text)' : 'var(--muted)'}">${esc(nameOf(id))}</span>`, dl = `<span class="delta ${d >= 0 ? 'up' : 'down'}">${signed(d)}</span>`;
+    const nm = `<span class="who" style="color:${won ? 'var(--text)' : 'var(--muted)'}" title="${esc(nameOf(id))}">${esc(nameS(id))}</span>`, dl = `<span class="delta ${d >= 0 ? 'up' : 'down'}">${signed(d)}</span>`;
     return `<div>${right ? dl + nm : nm + dl}</div>`;
   }).join('')}</div>`;
   card.innerHTML = `
@@ -2280,10 +2345,6 @@ function renderLastMatch() {
 }
 
 /* ---------------- Rangliste ---------------- */
-function formDots(form) {
-  return `<span class="form" aria-label="Form">${form.slice(-5).map(w => `<i class="${w ? 'w' : 'l'}"></i>`).join('')}</span>`;
-}
-
 /* Fallblatt: Zeichen, die sich seit der letzten Anzeige geändert haben, klappen
    wie bei einer echten Anzeigetafel ein paar Zeichen der Trommel durch. */
 const reduceMotion = !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -2326,23 +2387,17 @@ function runFlaps(root) {
 
 /* Namen für die Tafel: passt nicht, wird "VORNAME N." oder abgeschnitten */
 function boardName(name, n) {
-  const up = name.toUpperCase().replace(/\s+/g, ' ').trim();
-  if (up.length <= n) return up.padEnd(n, ' ');
-  const parts = up.split(' ');
-  if (parts.length > 1) {
-    const short = `${parts[0]} ${parts[parts.length - 1][0]}.`;
-    if (short.length <= n) return short.padEnd(n, ' ');
-  }
-  return up.slice(0, n);
+  return shortName(name.toUpperCase(), n, '').padEnd(n, ' ');
 }
 
 /* Spalten je nach Breite: Namen bekommen Vorrang, Zusatzspalten kommen dazu, wenn Platz ist */
-function boardLayout() {
+function boardLayout(names = []) {
   const board = $('#board');
   const style = getComputedStyle(board);
   const W = board.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 4;
   const small = W < 560;
-  const cw = W < 330 ? 13 : small ? 14 : 18, gap = 2, gg = small ? 7 : 12;
+  let cw = W < 330 ? 13 : small ? 14 : 18;
+  const gap = 2, gg = small ? 7 : 12;
   const gw = n => n * (cw + gap) - gap;
   const cols = [
     { k: 'rank', n: 2, label: 'Pl.', tip: 'Platz. Einen Platz gibt es ab 5 Spielen.' },
@@ -2362,6 +2417,9 @@ function boardLayout() {
   };
   if (S.lbPeriod !== 'all') cols.splice(cols.findIndex(c => c.k === 'title'), 1); // Titel gehören zur Gesamtwertung
   for (const e of extra) { cols.push(e); if (nameCells() < 13) { cols.pop(); break; } }
+  // Passt ein Name nicht einmal als "Vorname Nachname" hin, werden die Felder auf dem Handy etwas kleiner
+  const want = Math.min(20, Math.max(0, ...names.map(nm => { const p = nm.trim().split(/\s+/); return p.length > 1 ? Math.min(nm.length, p[0].length + 1 + p[p.length - 1].length) : nm.length; })));
+  if (small && cw > 12 && nameCells() < want) cw -= 1;
   cols.find(c => c.k === 'name').n = Math.max(6, Math.min(28, nameCells()));
   const tmpl = cols.map(c => c.k === 'name' ? 'minmax(0,1fr)' : `${c.px || gw(c.n)}px`).join(' ');
   board.style.setProperty('--cols', tmpl);
@@ -2379,13 +2437,12 @@ function renderSotm() {
   const cur = f.months.find(x => x.live && x.champ);
   const main = done || cur;
   if (!main) { box.innerHTML = ''; return; }
-  const nm = nameOf(main.champ.id).toUpperCase();
-  const shown = nm.length > 14 ? nm.slice(0, 13) + '.' : nm;
+  const shown = shortName(nameOf(main.champ.id).toUpperCase(), 14, '.');
   const title = done ? `Spieler des Monats ${done.label}` : `Spieler des Monats ${cur.label}, noch offen`;
   box.innerHTML = `<button class="display sotm" data-action="profile" data-pid="${esc(main.champ.id)}">
     <span class="row" style="justify-content:space-between;gap:8px"><span class="dlbl">${esc(title)}</span>${icon('laurel', 'style="color:var(--cyan)"')}</span>
     <span class="flaprow">${flap('sotm', shown, 'lg hl')}<span class="meta">${main.champ.rating} Punkte im Monat</span></span>
-    ${done && cur ? `<span class="next">Im ${esc(cur.label.split(' ')[0])} vorn: <b>${esc(nameOf(cur.champ.id))}</b> (${cur.champ.rating})</span>` : ''}
+    ${done && cur ? `<span class="next">Im ${esc(cur.label.split(' ')[0])} vorn: <b>${esc(nameS(cur.champ.id))}</b> (${cur.champ.rating})</span>` : ''}
   </button>`;
   runFlaps(box);
 }
@@ -2421,7 +2478,7 @@ function renderLeaderboard() {
   const q = S.lbQuery.trim().toLowerCase();
 
   const body = $('#lbBody');
-  const cols = boardLayout();
+  const cols = boardLayout(rows.map(x => x.p.name));
   $('#boardHead').innerHTML = cols.map(c => c.tip ? `<span ${c.k === 'title' ? 'class="crown" aria-label="Schachtitel"' : ''} ${tipAttr(c.tip)}>${esc(c.label)}</span>` : `<span>${esc(c.label)}</span>`).join('');
   const shown = [
     ...rows.filter(placed).map((x, i) => ({ ...x, rank: i + 1 })),
@@ -2479,7 +2536,7 @@ function renderLeaderboard() {
       return '';
     };
     const label = `${rank == null ? 'In Einstufung' : `Platz ${rank}`}, ${p.name}, ${rating} Punkte${r.games ? `, Siegquote ${pct(rate)}` : ', noch kein Spiel'}${lampTitle}`;
-    return `${pre}<button class="brow ${rank == null ? 'prov' : ''}" role="listitem" data-action="profile" data-pid="${esc(p.id)}" aria-label="${esc(label)}" title="${esc(p.name)}">${cols.map(c => `<span class="bc">${cell(c)}</span>`).join('')}</button>`;
+    return `${pre}<button class="brow ${rank == null ? 'prov' : ''}" role="listitem" data-action="profile" data-pid="${esc(p.id)}" title="${esc(p.name)}" aria-label="${esc(label)}" title="${esc(p.name)}">${cols.map(c => `<span class="bc">${cell(c)}</span>`).join('')}</button>`;
   }).join('');
   runFlaps(body);
 }
@@ -2589,8 +2646,8 @@ function renderInsights() {
     recCard({ ic: 'shield', color: 'var(--green)', title: 'Abwehrbollwerk', tip: `Die wenigsten Gegentore pro Spiel in der Abwehr. Nur Spiele bis ${S.league.target}, ab 5 Doppeln in der Abwehr.`, value: df ? df.p.name : '', meta: df ? `Ø ${avg1(df.g.dA / df.g.dN)} Gegentore pro Spiel in der Abwehr` : `Ab ${POSMIN} Doppeln bis ${S.league.target} in der Abwehr`, pid: df?.p.id }),
     recCard({ ic: 'pulse', color: 'var(--cyan)', title: 'Nervenstark', tip: 'Beste Siegquote in knappen Spielen (z. B. 5:3, 6:4, 7:6). Ab 5 knappen Spielen.', value: nerve ? nerve.p.name : '', meta: nerve ? `gewinnt ${pct(nerve.r.closeW / nerve.r.closeN)} der knappen Spiele` : 'Ab 5 knappen Spielen', pid: nerve?.p.id }),
     recCard({ ic: 'target', color: 'var(--green)', title: 'Zu-Null-König', tip: 'Höchster Anteil an Siegen ohne Gegentor, egal auf welcher Position. Ab 5 Siegen.', value: cs && cs.r.cs > 0 ? cs.p.name : '', meta: cs && cs.r.cs > 0 ? `${pct(cs.r.cs / cs.r.wins)} der Siege ohne Gegentor` : 'Noch kein Zu-Null-Sieg', pid: cs && cs.r.cs > 0 ? cs.p.id : null }),
-    recCard({ ic: 'spark', color: 'var(--magenta)', title: 'Größte Überraschung', tip: 'Der Sieg mit der geringsten Siegchance vor dem Spiel.', value: upset && upset.pw < 0.45 ? (upset.m.winner === 'blue' ? upset.m.blueIds : upset.m.greenIds).map(nameOf).join(' & ') : '', meta: upset && upset.pw < 0.45 ? `Sieg mit nur ${pctP(upset.pw)} Chance, ${fmtDate(upset.m.ts)}` : 'Bisher gewinnen die Favoriten' }),
-    recCard({ ic: 'sword', color: 'var(--cyan)', title: 'Größte Rivalität', tip: 'Die Paarung, die am häufigsten gegeneinander gespielt hat.', value: riv && riv.n >= 3 ? `${nameOf(riv.x)} gegen ${nameOf(riv.y)}` : '', meta: riv && riv.n >= 3 ? (riv.wx * 2 === riv.n ? 'Völlig ausgeglichen' : `${nameOf(riv.wx * 2 > riv.n ? riv.x : riv.y)} gewinnt ${pct(Math.max(riv.wx, riv.n - riv.wx) / riv.n)}`) : 'Ab 3 Duellen' })
+    recCard({ ic: 'spark', color: 'var(--magenta)', title: 'Größte Überraschung', tip: 'Der Sieg mit der geringsten Siegchance vor dem Spiel.', value: upset && upset.pw < 0.45 ? (upset.m.winner === 'blue' ? upset.m.blueIds : upset.m.greenIds).map(nameS).join(' & ') : '', meta: upset && upset.pw < 0.45 ? `Sieg mit nur ${pctP(upset.pw)} Chance, ${fmtDate(upset.m.ts)}` : 'Bisher gewinnen die Favoriten' }),
+    recCard({ ic: 'sword', color: 'var(--cyan)', title: 'Größte Rivalität', tip: 'Die Paarung, die am häufigsten gegeneinander gespielt hat.', value: riv && riv.n >= 3 ? `${nameS(riv.x)} gegen ${nameS(riv.y)}` : '', meta: riv && riv.n >= 3 ? (riv.wx * 2 === riv.n ? 'Völlig ausgeglichen' : `${nameS(riv.wx * 2 > riv.n ? riv.x : riv.y)} gewinnt ${pct(Math.max(riv.wx, riv.n - riv.wx) / riv.n)}`) : 'Ab 3 Duellen' })
   ];
   $('#records').innerHTML = cards.join('');
   renderPositions();
@@ -2607,12 +2664,12 @@ function renderInsights() {
   });
   const duos = Object.values(duo).filter(x => x.n >= 3).sort((a, b) => (b.w / b.n - a.w / a.n) || b.n - a.n).slice(0, 8);
   $('#duosBody').innerHTML = duos.length ? duos.map((x, i) => `<tr>
-      <td style="font-weight:600">${i === 0 ? `<span style="color:var(--magenta)">${icon('trophy')}</span> ` : ''}${x.ids.map(id => esc(nameOf(id))).join(' & ')}</td>
+      <td style="font-weight:600">${i === 0 ? `<span style="color:var(--magenta)">${icon('trophy')}</span> ` : ''}${x.ids.map(id => nameTag(id)).join(' & ')}</td>
       <td class="num"><strong>${pct(x.w / x.n)}</strong></td></tr>`).join('')
     : `<tr><td colspan="2"><div class="empty">Noch kein Duo mit drei gemeinsamen Doppeln.</div></td></tr>`;
 }
 
-/* ---------------- Positionen ---------------- */
+/* ---------------- Positionen-Karte ---------------- */
 function renderPositions() {
   const PS = periodStats(S.statPeriod || 'all');
   const R = { get: id => PS.get(id) };
@@ -2637,7 +2694,7 @@ function renderFame() {
   const item = x => {
     const c = x.champ;
     const inner = `<span class="per">${esc(x.label)}${x.live ? '<br>läuft' : ''}</span>
-      <span class="who">${c ? esc(nameOf(c.id)) : '<span class="muted" style="font-weight:400">noch kein Titel</span>'}</span>
+      <span class="who">${c ? nameTag(c.id) : '<span class="muted" style="font-weight:400">noch kein Titel</span>'}</span>
       <span class="val">${c ? `${c.rating}` : ''}</span>`;
     return c ? `<button class="fame-it ${x.live ? 'live' : 'champ'}" data-action="profile" data-pid="${esc(c.id)}">${inner}</button>`
       : `<div class="fame-it ${x.live ? 'live' : ''}" style="cursor:default">${inner}</div>`;
@@ -2647,7 +2704,7 @@ function renderFame() {
     ${most ? `<p class="sub" style="margin:0 0 12px">Meiste Titel: <strong style="color:var(--text)">${esc(nameOf(most[0]))}</strong> (${[most[1].seasons ? `${most[1].seasons}× Saison` : '', most[1].months ? `${most[1].months}× Monat` : '', most[1].tours ? `${most[1].tours}× Turnier` : ''].filter(Boolean).join(', ')}).</p>` : ''}
     <div class="fame">
       <div><p class="section-t">Saisons</p><div class="fame-list">${f.seasons.map(item).join('')}</div>
-        ${f.tours.length ? `<p class="section-t" style="margin-top:14px">Turniere</p><div class="fame-list">${f.tours.slice(0, 10).map(t => `<button class="fame-it champ" data-action="profile" data-pid="${esc(t.winners[0])}"><span class="per">${esc(fmtDate(t.endedAt || t.createdAt).slice(0, 6))}</span><span class="who">${t.winners.map(id => esc(nameOf(id))).join(' & ')}</span><span class="val">DYP</span></button>`).join('')}</div>` : ''}</div>
+        ${f.tours.length ? `<p class="section-t" style="margin-top:14px">Turniere</p><div class="fame-list">${f.tours.slice(0, 10).map(t => `<button class="fame-it champ" data-action="profile" data-pid="${esc(t.winners[0])}"><span class="per">${esc(fmtDate(t.endedAt || t.createdAt).slice(0, 6))}</span><span class="who">${t.winners.map(id => nameTag(id)).join(' & ')}</span><span class="val">DYP</span></button>`).join('')}</div>` : ''}</div>
       <div><p class="section-t">Monate</p><div class="fame-list">${f.months.slice(0, 12).map(item).join('')}</div></div>
     </div>`;
 }
@@ -2698,7 +2755,7 @@ function renderCompare() {
   together.forEach(m => { const pos = m.blueIds.includes(A) ? m.posB : m.posG; if (!pos) return; const k = pos.forward === A ? 'AvB' : 'BvA'; form[k][1]++; if (aWins(m)) form[k][0]++; });
   const pA = winProb([rA], [rB]);
   const ctA = chessTitle(disp(rA), rA.games >= CFG.placement), ctB = chessTitle(disp(rB), rB.games >= CFG.placement);
-  const head = (id, r, ct, right) => `<div class="vs-side ${right ? 'r' : ''}">${avatar(nameOf(id), 'lg')}<div class="vs-name">${esc(nameOf(id))}</div>
+  const head = (id, r, ct, right) => `<div class="vs-side ${right ? 'r' : ''}">${avatar(nameOf(id), 'lg')}<div class="vs-name" title="${esc(nameOf(id))}">${esc(nameS(id))}</div>
     <div class="vs-meta">${ct ? `<span style="color:var(--amber)">${ct.abbr}</span> ` : ''}<span class="mono">${disp(r)}</span></div></div>`;
   const dots = [...vsGames].reverse().slice(0, 10).reverse().map(m => `<i class="${aWins(m) ? 'a' : 'b'}" title="${fmtDate(m.ts)}: ${m.blueIds.includes(A) ? m.sb : m.sg}:${m.blueIds.includes(A) ? m.sg : m.sb}"></i>`).join('');
   const row = (label, va, vb, fmt = v => v, higherBetter = true) => {
@@ -2709,21 +2766,21 @@ function renderCompare() {
   const dec = v => v.toFixed(1).replace('.', ',');
   const posTxt = (r) => { const v = posVerdict(r); return v.key === 'f' ? 'Sturm' : v.key === 'd' ? 'Abwehr' : '–'; };
   const fq = k => form[k][1] ? `${pct(form[k][0] / form[k][1])}` : '–';
-  const lead = dw === dl ? 'Ausgeglichen' : `${esc(dw > dl ? nA : nB)} führt`;
+  const lead = dw === dl ? 'Ausgeglichen' : `${esc(nameS(dw > dl ? A : B))} führt`;
   out.innerHTML = `
     <div class="display vs">
-      <div class="vs-top">${head(A, rA, ctA, false)}<div class="vs-mid"><div class="dlbl">Duelle</div><div class="vs-score"><span class="${dw > dl ? 'lead' : ''}">${dw}</span> : <span class="${dl > dw ? 'lead' : ''}">${dl}</span></div><div class="vs-lead">${vsGames.length ? lead : 'Noch kein Duell'}</div></div>${head(B, rB, ctB, true)}</div>
+      <div class="vs-top">${head(A, rA, ctA, false)}<div class="vs-mid"><div class="dlbl">Duelle</div><div class="vs-score"><span class="${dw > dl ? 'lead' : ''}">${dw}</span> : <span class="${dl > dw ? 'lead' : ''}">${dl}</span></div></div>${head(B, rB, ctB, true)}<div class="vs-lead">${vsGames.length ? lead : 'Noch kein Duell'}</div></div>
       ${vsGames.length ? `<div class="vs-dots" aria-label="Letzte Duelle, neuestes rechts">${dots}</div>
-      <div class="vs-foot"><span><span class="dlbl">Tore </span>${goalsA} : ${goalsB}</span>${streak >= 2 ? `<span><span class="dlbl">Serie </span>${esc(nameOf(streakWho))} ${streak}× in Folge</span>` : ''}</div>` : ''}
+      <div class="vs-foot"><span><span class="dlbl">Tore </span>${goalsA} : ${goalsB}</span>${streak >= 2 ? `<span><span class="dlbl">Serie </span>${esc(nameS(streakWho))} ${streak}× in Folge</span>` : ''}</div>` : ''}
       <div style="margin-top:12px"><div class="row" style="justify-content:space-between;font-size:12px"><span class="dlbl">Prognose im Einzel</span><span class="mono" style="color:var(--magenta)">${pctP(pA)} : ${pctP(1 - pA)}</span></div>
         <div class="tape" style="height:24px"><div class="tape-bar" style="top:6px"><div class="b" style="width:${pA * 100}%;background:#3fd0e0"></div><div class="g" style="background:#f3f6fa;opacity:.85"></div></div><div class="tape-pointer" style="left:${pA * 100}%;top:-3px"></div></div></div>
     </div>
     <div class="card" style="padding:14px;margin-top:12px;background:var(--panel-0)">
       <p class="section-t" style="margin-top:0">Zusammen im Doppel</p>
-      ${together.length ? `<div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      ${together.length ? `<div class="kpis tight" style="grid-template-columns:repeat(3,minmax(0,1fr))">
         <div class="kpi"><div class="v">${pct(tw / together.length)}</div><div class="k">Siege zusammen</div></div>
-        <div class="kpi"><div class="v" style="font-size:16px">${fq('AvB')}</div><div class="k">${esc(nA)} vorn</div></div>
-        <div class="kpi"><div class="v" style="font-size:16px">${fq('BvA')}</div><div class="k">${esc(nB)} vorn</div></div>
+        <div class="kpi"><div class="v" style="font-size:16px">${fq('AvB')}</div><div class="k" title="${esc(nA)}">${esc(shortName(nA, 12))} vorn</div></div>
+        <div class="kpi"><div class="v" style="font-size:16px">${fq('BvA')}</div><div class="k" title="${esc(nB)}">${esc(shortName(nB, 12))} vorn</div></div>
       </div>
       <p class="sub" style="margin:8px 0 0">Zum Vergleich allein: ${esc(nA)} ${pct(per(rA, 'wins'))}, ${esc(nB)} ${pct(per(rB, 'wins'))} Siege.</p>`
       : `<p class="sub" style="margin:0">Noch nie zusammen im Doppel gespielt. Prognose als Team gegen zwei Durchschnittsspieler: ${pctP(winProb([rA, rB], [fresh(), fresh()]))}.</p>`}
@@ -2780,7 +2837,7 @@ function renderHistory() {
 }
 
 /* Turnier-Protokoll → Einträge für den Verlauf */
-const fxText = fx => (fx || []).map(f => `${f.b.map(nameOf).join(' & ')} gegen ${f.g.map(nameOf).join(' & ')}`).join('; ');
+const fxText = fx => (fx || []).map(f => `${f.b.map(nameS).join(' & ')} gegen ${f.g.map(nameS).join(' & ')}`).join('; ');
 function tourEvents() {
   const out = [];
   S.toursRaw.forEach(t => {
@@ -2813,7 +2870,7 @@ function histItem(m) {
   const side = (ids, won, cls, right) => `<div class="side ${right ? 'r' : ''}">${ids.map(id => {
     const dl = per?.deltas[id];
     const dStr = dl == null ? '' : `<span class="delta ${dl >= 0 ? 'up' : 'down'}">${signed(dl)}</span>`;
-    const nm = `<span class="names ${won ? 'win ' + cls : 'lose'}" ${S.histPlayer === id ? 'style="text-decoration:underline"' : ''}>${esc(nameOf(id))}</span>`;
+    const nm = `<span class="names ${won ? 'win ' + cls : 'lose'}" ${S.histPlayer === id ? 'style="text-decoration:underline"' : ''} title="${esc(nameOf(id))}">${esc(nameS(id))}</span>`;
     return `<div>${right ? dStr + nm : nm + dStr}</div>`;
   }).join('')}</div>`;
   const tags = [
@@ -2976,13 +3033,13 @@ function renderDyp() {
       </div>
     </div></div>`;
   if (fx.length) {
-    if (resting.length) html += `<div class="banner info">${icon('coffee')}<div class="grow"><strong ${tipAttr('Pause macht, wer in dieser Spielpause schon am meisten gespielt hat. Wer neu dazukommt, ist sofort dran.')}>Pause in Runde ${t.round}<span class="tipq">?</span>:</strong> ${resting.map(id => esc(nameOf(id))).join(', ')}</div></div>`;
+    if (resting.length) html += `<div class="banner info">${icon('coffee')}<div class="grow"><strong ${tipAttr('Pause macht, wer in dieser Spielpause schon am meisten gespielt hat. Wer neu dazukommt, ist sofort dran.')}>Pause in Runde ${t.round}<span class="tipq">?</span>:</strong> ${resting.map(id => nameTag(id)).join(', ')}</div></div>`;
     html += fx.map((f, i) => {
       const sc = f.done ? { sb: f.sb, sg: f.sg } : fxScore(t, i);
       const lock = f.done || tourBusy.has(liveKey(t, i));
       const team = (cls, ids, k) => `<div class="fx-team ${cls}">
-        <div class="pos"><span>Sturm</span>${esc(nameOf(ids[0]))}</div>
-        <div class="pos"><span>Abwehr</span>${esc(nameOf(ids[1]))}</div>
+        <div class="pos"><span>Sturm</span>${nameTag(ids[0])}</div>
+        <div class="pos"><span>Abwehr</span>${nameTag(ids[1])}</div>
         <div class="score-row"><span class="lbl">Tore</span><div class="stepper">
           <button class="step" ${lock ? 'disabled' : ''} data-action="tourScore" data-fx="${i}" data-k="${k}" data-d="-1" aria-label="Tor abziehen">−</button>
           <output class="score">${sc[k]}</output>
@@ -3002,7 +3059,7 @@ function renderDyp() {
   if (rows.length) {
     html += `<div class="card"><div class="card-head"><div><h3>Turnier-Tabelle</h3><p class="sub">Nach Siegen, dann Tordifferenz.</p></div></div>
       <div class="tbl-wrap"><table><thead><tr><th class="ctr">#</th><th>Spieler</th><th class="ctr">Spiele</th><th class="ctr">Siege</th><th class="num">Tordiff.</th></tr></thead><tbody>
-      ${rows.map((e, i) => `<tr class="clickable" data-action="profile" data-pid="${esc(e.id)}"><td class="rank ${i === 0 ? 'top' : ''}">${i + 1}</td><td style="font-weight:600">${esc(nameOf(e.id))}</td>
+      ${rows.map((e, i) => `<tr class="clickable" data-action="profile" data-pid="${esc(e.id)}"><td class="rank ${i === 0 ? 'top' : ''}">${i + 1}</td><td style="font-weight:600">${nameTag(e.id)}</td>
         <td class="ctr mono">${e.n}</td><td class="ctr mono" style="color:var(--green)">${e.w}</td><td class="num" style="color:${e.gd >= 0 ? 'var(--green)' : 'var(--red)'}">${signed(e.gd)}</td></tr>`).join('')}
       </tbody></table></div></div>`;
   }
@@ -3252,7 +3309,7 @@ function renderProfile(pid) {
   const opps = Object.entries(r.opp).filter(([, v]) => v.w + v.l >= 2).map(([id, v]) => ({ id, ...v, rate: v.w / (v.w + v.l) }));
   const favs = [...opps].sort((a, b) => b.rate - a.rate || b.w - a.w).filter(o => o.rate > 0.5).slice(0, 3);
   const nems = [...opps].sort((a, b) => a.rate - b.rate || b.l - a.l).filter(o => o.rate < 0.5).slice(0, 3);
-  const plist = (arr, fmt, empty) => arr.length ? arr.map(o => `<button class="mini-it" data-action="profile" data-pid="${esc(o.id)}"><span>${esc(nameOf(o.id))}</span><span class="mono">${fmt(o)}</span></button>`).join('') : `<div class="muted small" style="padding:6px 2px">${empty}</div>`;
+  const plist = (arr, fmt, empty) => arr.length ? arr.map(o => `<button class="mini-it" data-action="profile" data-pid="${esc(o.id)}"><span title="${esc(nameOf(o.id))}">${esc(nameS(o.id))}</span><span class="mono">${fmt(o)}</span></button>`).join('') : `<div class="muted small" style="padding:6px 2px">${empty}</div>`;
   // Monatsplätze (nur Monate mit Platzierung)
   const mplaces = fame.months.slice(0, 6).map(m => ({ label: m.label, live: m.live, place: (m.order || []).indexOf(pid) + 1, of: (m.order || []).length })).filter(x => x.place > 0);
   const recent = [...d.valid].reverse().filter(m => m.blueIds.includes(pid) || m.greenIds.includes(pid)).slice(0, 5);
