@@ -525,6 +525,17 @@ dialog[open]{animation:pop .18s ease-out}
 .switch input:checked::after{left:20px;background:var(--cyan)}
 .err-text{color:var(--red);font-size:13px;min-height:18px}
 
+/* ---------- Erklärseite ---------- */
+.help{font-size:14px;line-height:1.55}
+.help section{scroll-margin-top:8px}
+.help h4{margin:4px 0 6px;font-family:var(--display);font-size:15px;color:var(--cyan)}
+.help p{margin:0 0 8px;color:var(--text)}
+.help ul{margin:0 0 8px;padding-left:18px;display:grid;gap:5px}
+.help b{color:var(--text);font-weight:700}
+.help-nav{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.help-nav button{background:none;font-size:12.5px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);text-decoration:none}
+.help-nav button:hover{color:var(--cyan);border-color:rgba(63,208,224,.5)}
+
 /* ---------- Lange Namen ----------
    Namen dürfen bis zu 30 Zeichen haben. Nichts darf dadurch breiter als der Bildschirm werden:
    Raster- und Flex-Elemente dürfen schrumpfen, Namen in Listen werden mit … gekürzt,
@@ -757,7 +768,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
       <div class="card-head">
         <div>
           <h2>Rangliste</h2>
-          <p class="sub" id="lbSub"></p>
+          <p class="sub"><span id="lbSub"></span> <button class="linkbtn" data-action="help" data-sec="zeitraum">Wie wird gewertet?</button></p>
         </div>
         <button class="btn sm" data-action="addPlayer"><svg class="i"><use href="#i-userplus"/></svg>Spieler</button>
       </div>
@@ -868,6 +879,62 @@ body[data-mode="1v1"] .only2v2{display:none!important}
   <div class="dlg">
     <div class="dlg-head"><div id="profHead" class="prof-head"></div><button class="x-btn" data-close aria-label="Schließen"><svg class="i"><use href="#i-x"/></svg></button></div>
     <div class="dlg-body" id="profBody"></div>
+  </div>
+</dialog>
+
+<dialog id="dlgHelp" class="wide">
+  <div class="dlg">
+    <div class="dlg-head"><h3>So funktioniert die Wertung</h3><button class="x-btn" data-close aria-label="Schließen"><svg class="i"><use href="#i-x"/></svg></button></div>
+    <div class="dlg-body help" id="helpBody">
+      <nav class="help-nav" aria-label="Abschnitte">
+        <button type="button" data-action="help" data-sec="kurz">Kurz gesagt</button><button type="button" data-action="help" data-sec="doppel">Doppel</button><button type="button" data-action="help" data-sec="neu">Neu dabei</button><button type="button" data-action="help" data-sec="zeitraum">Monat, Saison, Gesamt</button><button type="button" data-action="help" data-sec="dyp">DYP</button><button type="button" data-action="help" data-sec="mehr">Sonst noch</button>
+      </nav>
+      <section id="help-kurz">
+        <h4>Kurz gesagt</h4>
+        <p>Alle starten bei <b>1500 Punkten</b>. Nach jedem Spiel bekommen die Sieger Punkte, die Verlierer geben welche ab. Wie viele, hängt davon ab, wie überraschend das Ergebnis war:</p>
+        <ul>
+          <li>Sieg gegen Stärkere: viele Punkte. Sieg gegen Schwächere: wenige.</li>
+          <li>Ein deutlicher Sieg (5:0) zählt mehr als ein knapper (7:6).</li>
+        </ul>
+        <p>Aus den Punkten kommen auch die Siegchancen vor jedem Spiel. Faustregel: Bei <b>200 Punkten Unterschied</b> gewinnt der Stärkere knapp 3 von 4 Spielen.</p>
+      </section>
+      <section id="help-doppel">
+        <h4>Doppel</h4>
+        <p>Gerechnet wird mit der Stärke des Teams, also dem Durchschnitt beider. Beide im Siegerteam gewinnen Punkte, aber nicht unbedingt gleich viele: Wer noch wenige Spiele hat, bewegt sich stärker als ein eingespielter Partner.</p>
+        <p>Ob man im Sturm oder in der Abwehr steht, ändert die Punkte nicht. Die Position fließt nur in die Statistik ein.</p>
+      </section>
+      <section id="help-neu">
+        <h4>Neu dabei: Einstufung und ±</h4>
+        <p>Am Anfang weiß die App wenig über dich. Deshalb springt die Wertung in den ersten Spielen stark und wird mit jedem Spiel ruhiger. Das <b>±</b> im Profil zeigt, wie unsicher sie noch ist.</p>
+        <p>Einen Platz in der Gesamtrangliste gibt es ab <b>5 Spielen</b>. Wer 90 Tage nicht spielt, wird ausgeblendet, die Punkte bleiben.</p>
+        <p><b>Durchmarsch:</b> Spielt jemand über viele Spiele deutlich besser, als seine Punkte erwarten lassen, gilt seine Wertung wieder als unsicher. So holt er schnell auf, statt lange hinterherzulaufen.</p>
+      </section>
+      <section id="help-zeitraum">
+        <h4>Monat, Saison, Gesamt</h4>
+        <ul>
+          <li><b>Gesamt</b> zählt alle Spiele seit Beginn. Das ist die eigentliche Wertung: Nach ihr richten sich die Siegchancen, das Auslosen und die Schachtitel.</li>
+          <li><b>Monat</b> und <b>Saison</b> (Quartal) sind eigene Tabellen. Alle starten wieder bei 1500, gezählt werden nur Spiele aus diesem Zeitraum. So hat jeder jeden Monat eine neue Chance, auch wer insgesamt weiter hinten steht.</li>
+          <li>Weil am Anfang des Monats wieder alle neu eingestuft werden, schwanken die Monatspunkte in den ersten Spielen stark. Einen Platz gibt es ab <b>4 Spielen</b>. Wer am Monatsende vorne liegt, wird Spieler des Monats.</li>
+        </ul>
+        <p>Deshalb kann jemand im Monat vor jemandem stehen, der insgesamt deutlich mehr Punkte hat.</p>
+      </section>
+      <section id="help-dyp">
+        <h4>DYP-Turniere</h4>
+        <ul>
+          <li><b>Wer pausiert:</b> wer in der laufenden Spielpause schon am meisten gespielt hat. Wer neu dazukommt, ist sofort dran.</li>
+          <li><b>Turnier-Tabelle:</b> Wert = (Siege + 1,5) / (Spiele + 3), also eine geglättete Siegquote (Bayes'scher Durchschnitt). Beispiele: 1 von 1 → 63, 9 von 10 → 81. Bei Gleichstand zählt die Tordifferenz pro Spiel.</li>
+          <li>Turnierspiele zählen ganz normal für alle Ranglisten.</li>
+        </ul>
+      </section>
+      <section id="help-mehr">
+        <h4>Sonst noch</h4>
+        <ul>
+          <li><b>Schachtitel</b> (nur Gesamt, nach der Einstufung): GM ab 1750, IM ab 1675, FM ab 1600, CM ab 1550 Punkten.</li>
+          <li>Die Punkte werden nie gespeichert, sondern jedes Mal aus allen Spielen neu berechnet. Wird ein Spiel annulliert, ist es, als hätte es nie stattgefunden.</li>
+          <li>Technisch ist es eine Variante von TrueSkill, dem System hinter den Ranglisten vieler Online-Spiele. Ähnlich wie Elo, nur mit eingebauter Unsicherheit.</li>
+        </ul>
+      </section>
+    </div>
   </div>
 </dialog>
 
@@ -1000,7 +1067,8 @@ const CFG = {
   nameMax: 30,
   histPage: 40,
   fameMinGames: 4,   // Mindestspiele im Monat/in der Saison für einen Titel
-  appVersion: '2.5.3'
+  tables: 1,         // Kickertische: so viele Spiele werden bei DYP pro Runde gleichzeitig ausgelost
+  appVersion: '2.6.1'
 };
 
 /* ---------------- Helfer ---------------- */
@@ -1288,17 +1356,28 @@ const CHESS = [
 function chessTitle(rating, placed = true) { return placed ? CHESS.find(t => rating >= t.min) || null : null; }
 
 /* ---------------- Turniertabelle ---------------- */
+/* Turnierwert = geglättete Siegquote: Jeder bekommt 3 Spiele mit 50 % dazugerechnet,
+   (Siege + 1,5) / (Spiele + 3). Wer viel spielt, liegt dadurch nicht automatisch vorne, und ein
+   einzelner Glückssieg gewinnt nicht. Per Simulation (sim/tourfair.mjs) gewählt: Wer nur einen Teil
+   der Zeit da ist, landet genauso oft vor einem gleich starken Dauerspieler wie dahinter.
+   Bei Gleichstand entscheidet die Tordifferenz pro Spiel. */
+const TOUR_PRIOR = 3;
 function tourTable(results) {
   const t = {};
   results.forEach(r => {
     const add = (ids, gf, ga) => ids.forEach(id => { const e = t[id] || (t[id] = { id, n: 0, w: 0, gd: 0 }); e.n++; if (gf > ga) e.w++; e.gd += gf - ga; });
     add(r.blue, r.sb, r.sg); add(r.green, r.sg, r.sb);
   });
-  return Object.values(t).sort((a, b) => b.w - a.w || b.gd - a.gd || a.n - b.n);
+  const rows = Object.values(t);
+  rows.forEach(e => { e.rate = e.w / e.n; e.gpg = e.gd / e.n; e.score = (e.w + TOUR_PRIOR / 2) / (e.n + TOUR_PRIOR); });
+  return rows.sort((a, b) => (b.score - a.score) || (b.gpg - a.gpg) || (b.w - a.w));
 }
 function tourWinners(rows) {
-  if (!rows.length || rows[0].w < 1) return [];
-  return rows.filter(r => r.w === rows[0].w && r.gd === rows[0].gd).map(r => r.id);
+  const top = rows[0];
+  if (!top || top.w < 1) return [];
+  // gleich gut = gleicher Turnierwert und gleiche Tordifferenz pro Spiel (exakt über Kreuzprodukt)
+  const same = r => (2 * r.w + TOUR_PRIOR) * (top.n + TOUR_PRIOR) === (2 * top.w + TOUR_PRIOR) * (r.n + TOUR_PRIOR) && r.gd * top.n === top.gd * r.n;
+  return rows.filter(same).map(r => r.id);
 }
 
 /* ---------------- Abzeichen ---------------- */
@@ -1340,9 +1419,9 @@ function plausibleScore(sb, sg, rules) {
    (bei Gleichstand nicht zweimal hintereinander). Unter vielen Zufallsaufteilungen
    wird die mit den wenigsten wiederholten Partnern/Gegnern gewählt, im Modus
    "ausgeglichen" zusätzlich die mit den knappsten Prognosen. */
-function planRound(ids, st, fair, rOf, rnd = Math.random) {
+function planRound(ids, st, fair, rOf, rnd = Math.random, maxTables = Infinity) {
   const shuf = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  const tables = Math.floor(ids.length / 4);
+  const tables = Math.min(maxTables, Math.floor(ids.length / 4));
   const nRest = ids.length - tables * 4;
   const last = new Set(st.resting || []);
   const rest = st.rest || {}, pair = st.pair || {}, opp = st.opp || {}, played = st.played || {};
@@ -2404,7 +2483,7 @@ function boardLayout(names = []) {
     { k: 'lamp', px: 10, label: '' },
     { k: 'name', n: 0, label: 'Spieler' },
     { k: 'title', n: 2, label: '♔', tip: 'Schachtitel nach Wertung: GM ab 1750, IM ab 1675, FM ab 1600, CM ab 1550 Punkten. Erst nach der Einstufung.' },
-    { k: 'rt', n: 4, label: 'Wertung', tip: 'Elo-Skala, Start bei 1500. 200 Punkte Unterschied: Der Stärkere gewinnt etwa 3 von 4 Spielen.' }
+    { k: 'rt', n: 4, label: 'Wertung', tip: S.lbPeriod === 'all' ? 'Punkte aus allen Spielen, Start bei 1500. 200 Punkte Unterschied: Der Stärkere gewinnt knapp 3 von 4 Spielen.' : `Punkte nur aus Spielen ${S.lbPeriod === 'month' ? 'dieses Monats' : 'dieser Saison'}, alle starten bei 1500.` }
   ];
   const extra = [
     { k: 'quote', n: 3, label: 'Quote %', tip: 'Siegquote in Prozent.' },
@@ -2462,9 +2541,9 @@ function renderLeaderboard() {
   $$('#segPeriod button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.lbPeriod)));
   $$('#segFilter button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.lbFilter)));
   const subs = {
-    all: `Aktiv: gespielt in den letzten 90 Tagen. Platz ab ${CFG.placement} Spielen.`,
-    season: `Saison ${seasonLabel(now)}: nur Spiele seit ${qStart}. Alle starten neu, Platz ab ${CFG.fameMinGames} Spielen.`,
-    month: `Nur Spiele im ${monthName}. Wer hier vorne liegt, wird Spieler des Monats. Platz ab ${CFG.fameMinGames} Spielen.`
+    all: `Alle Spiele seit Beginn. Platz ab ${CFG.placement} Spielen.`,
+    season: `Saison ${seasonLabel(now)}: alle starten bei 1500, nur Spiele seit ${qStart} zählen. Platz ab ${CFG.fameMinGames} Spielen.`,
+    month: `${monthName}: alle starten bei 1500, nur Spiele dieses Monats zählen. Wer vorne liegt, wird Spieler des Monats.`
   };
   $('#lbSub').textContent = subs[S.lbPeriod];
   renderSotm();
@@ -3057,10 +3136,11 @@ function renderDyp() {
   }
   const rows = tourTable(tourResults(t));
   if (rows.length) {
-    html += `<div class="card"><div class="card-head"><div><h3>Turnier-Tabelle</h3><p class="sub">Nach Siegen, dann Tordifferenz.</p></div></div>
-      <div class="tbl-wrap"><table><thead><tr><th class="ctr">#</th><th>Spieler</th><th class="ctr">Spiele</th><th class="ctr">Siege</th><th class="num">Tordiff.</th></tr></thead><tbody>
+    const gpg = v => (v > 0.05 ? '+' : v < -0.05 ? '−' : '±') + Math.abs(v).toFixed(1).replace('.', ',');
+    html += `<div class="card"><div class="card-head"><div><h3>Turnier-Tabelle</h3><p class="sub">Nach Turnierwert, bei Gleichstand nach Tordifferenz. <button class="linkbtn" data-action="help" data-sec="dyp">Wie genau?</button></p></div></div>
+      <div class="tbl-wrap"><table><thead><tr><th class="ctr">#</th><th>Spieler</th><th class="num" ${tipAttr('Wert = (Siege + 1,5) / (Spiele + 3), geglättete Siegquote.')}>Wert</th><th class="num" ${tipAttr('Tordifferenz pro Spiel')}>Ø Tordiff.</th></tr></thead><tbody>
       ${rows.map((e, i) => `<tr class="clickable" data-action="profile" data-pid="${esc(e.id)}"><td class="rank ${i === 0 ? 'top' : ''}">${i + 1}</td><td style="font-weight:600">${nameTag(e.id)}</td>
-        <td class="ctr mono">${e.n}</td><td class="ctr mono" style="color:var(--green)">${e.w}</td><td class="num" style="color:${e.gd >= 0 ? 'var(--green)' : 'var(--red)'}">${signed(e.gd)}</td></tr>`).join('')}
+        <td class="num mono">${Math.round(e.score * 100)}</td><td class="num" style="color:${e.gpg > 0.05 ? 'var(--green)' : e.gpg < -0.05 ? 'var(--red)' : 'var(--muted)'}">${gpg(e.gpg)}</td></tr>`).join('')}
       </tbody></table></div></div>`;
   }
   if (redraws.length) {
@@ -3099,7 +3179,7 @@ function tourLastAt(x) {
 function drawPatch(t, base, fair) {
   const ids = tourPresent(t);
   if (ids.length < 4) throw userErr('Mindestens vier Anwesende auswählen.');
-  const plan = planRound(ids, base, fair, ratingOf);
+  const plan = planRound(ids, base, fair, ratingOf, Math.random, CFG.tables);
   plan.fixtures.forEach(f => ['blue', 'green'].forEach(k => { if (swapGain(ratingOf(f[k][0]), ratingOf(f[k][1])) > 0) f[k] = [f[k][1], f[k][0]]; }));
   return { fixtures: plan.fixtures, resting: plan.resting, rest: plan.rest, pair: plan.pair, opp: plan.opp, played: plan.played, drawId: newDrawId(), live: {} };
 }
@@ -3293,7 +3373,7 @@ function renderProfile(pid) {
     <div class="row wrap-ok" style="gap:6px;margin-top:4px;font-size:13px">
       ${(() => { const ct = chessTitle(rating, r.games >= CFG.placement && !p.archived); return ct ? `<span class="tier t3" ${tipAttr(`${ct.name}: ab ${ct.min} Punkten. Darüber: ${CHESS.filter(x => x.min > ct.min).map(x => `${x.abbr} ab ${x.min}`).join(', ') || 'nichts, höchster Titel'}.`)}>${ct.abbr} ${ct.name}</span>` : ''; })()}
       ${p.archived ? '<span class="tag void">archiviert</span>' : r.games < CFG.placement ? `<span class="mono muted">In Einstufung, ${r.games} von ${CFG.placement} Spielen</span>` : `<span class="mono muted">Rang ${rank} von ${list.length}</span>`}
-      <span class="mono" style="color:var(--cyan)">${rating} Punkte</span><span class="dim mono" ${tipAttr('Unsicherheit der Schätzung: So weit kann die wahre Stärke noch nach oben oder unten abweichen.')}>±${Math.round(40 * r.sigma)}</span>
+      <span class="mono" style="color:var(--cyan)">${rating} Punkte</span><span class="dim mono" ${tipAttr('Unsicherheit der Schätzung: So weit kann die wahre Stärke noch nach oben oder unten abweichen.')}>±${Math.round(40 * r.sigma)}</span><button class="linkbtn small" data-action="help" data-sec="kurz">Wie wird gewertet?</button>
     </div></div>`;
 
   const rate = r.games ? r.wins / r.games : 0;
@@ -3329,7 +3409,7 @@ function renderProfile(pid) {
     ${mplaces.length ? `<div><p class="section-t">Monatsplätze</p><div class="mplaces">${mplaces.map(x => `<span class="mp ${x.place === 1 ? 'gold' : ''}">${esc(x.label)}${x.live ? ' (läuft)' : ''}<b>${x.place}.</b></span>`).join('')}</div></div>` : ''}
     <div class="two-col">
       <div><p class="section-t">Beste Doppelpartner</p>${plist(partners.slice(0, 3), o => pct(o.rate), 'Ab 2 gemeinsamen Doppeln')}</div>
-      <div><p class="section-t">Lieblingsgegner</p>${plist(favs, o => `${o.w} : ${o.l}`, 'Noch offen')}<p class="section-t" style="margin-top:10px">Angstgegner</p>${plist(nems, o => `${o.w} : ${o.l}`, 'Keiner')}</div>
+      <div><p class="section-t">Lieblingsgegner</p>${plist(favs, o => pct(o.rate), 'Noch offen')}<p class="section-t" style="margin-top:10px">Angstgegner</p>${plist(nems, o => pct(o.rate), 'Keiner')}</div>
     </div>
     <div class="h2h"><div class="it" style="display:block">
       <div class="row" style="justify-content:space-between"><span class="k">Position im Doppel</span><span class="tier ${pv.key === 'f' || pv.key === 'd' ? 't3' : ''}">${pv.label}</span></div>
@@ -3551,7 +3631,7 @@ function renderSettings() {
         <div class="seg" role="group" aria-label="Höchstens">${[0, 7, 8].map(v => `<button data-action="league" data-k="cap" data-v="${v}" aria-pressed="${S.league.cap === v}">${v ? 'max. ' + v : 'offen'}</button>`).join('')}</div>
       </div><p class="sub" style="margin:6px 0 0">Gilt sofort für alle Geräte.</p>` : ''}
     </div>
-    <button class="btn sm" data-action="openQr" style="justify-self:start">${icon('qr')}QR-Code für den Tisch drucken</button>
+    <div class="row wrap-ok" style="gap:8px"><button class="btn sm" data-action="help" data-sec="kurz">${icon('info')}So funktioniert die Wertung</button><button class="btn sm" data-action="openQr">${icon('qr')}QR-Code für den Tisch drucken</button></div>
     <label class="switch"><span>Signalton nach jedem Spiel<br><span class="muted small">Nur auf diesem Gerät</span></span><input type="checkbox" id="swSound" ${S.sound ? 'checked' : ''}></label>
     ${S.isAdmin && d ? (() => {
       const v = d.valid, goals = v.reduce((s, m) => s + m.sb + m.sg, 0);
@@ -3579,6 +3659,13 @@ function renderSettings() {
 
 /* ---------------- QR ---------------- */
 function tableUrl() { return location.href.split('#')[0] + '#spiel'; }
+// Erklärseite zur Wertung, optional direkt an einem Abschnitt
+function openHelp(sec) {
+  closeDialog('dlgSettings');
+  openDialog('dlgHelp');
+  const body = $('#helpBody'), target = sec && $(`#help-${sec}`);
+  body.scrollTop = target && sec !== 'kurz' ? target.offsetTop - body.offsetTop - 6 : 0;
+}
 function openQr() {
   const url = tableUrl();
   $('#qrUrl').textContent = url;
@@ -3682,6 +3769,7 @@ const ACTIONS = {
   },
   openSettings: () => { renderSettings(); openDialog('dlgSettings'); },
   openQr: () => { closeDialog('dlgSettings'); openQr(); },
+  help: el => openHelp(el.dataset.sec),
   printQr: () => printQr(),
   exportJson: () => exportJson(),
   restoreBackup: () => pickBackupFile(),
