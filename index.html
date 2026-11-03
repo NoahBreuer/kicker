@@ -540,11 +540,18 @@ dialog[open]{animation:pop .18s ease-out}
 .help-ex td:nth-child(2){text-align:right;white-space:nowrap;color:var(--muted)}
 .help-ex td:nth-child(3){text-align:right;font-family:var(--mono)}
 .help-ex .up{color:var(--green)} .help-ex .down{color:var(--red)}
-.fx{display:grid;gap:8px}
-.fx>div{display:grid;gap:3px;padding:9px 11px;border-radius:var(--r-md);background:var(--panel-0);border:1px solid var(--line)}
-.fx span{font-size:12px;font-weight:700;color:var(--cyan)}
-.fx code{font-family:var(--mono);font-size:13px;color:var(--text);overflow-wrap:anywhere}
-.fx small{font-size:12px;color:var(--muted)}
+.help .sym{grid-template-columns:auto minmax(0,1fr);gap:4px 12px;font-size:13.5px}
+.help .sym dt{color:var(--text);font-weight:400;font-size:14px;white-space:nowrap}
+@media (max-width:420px){.help .sym{grid-template-columns:auto minmax(0,1fr)}.help .sym dd{margin-bottom:0}}
+.help i{font-family:Georgia,'Times New Roman',serif;font-style:italic}
+.steps{margin:12px 0 4px;padding-left:22px;display:grid;gap:12px}
+.steps li::marker{color:var(--cyan);font-weight:700}
+.steps p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.eq{white-space:pre-wrap;margin:6px 0 2px;padding:8px 11px;border-radius:9px;background:var(--panel-0);border:1px solid var(--line);font-size:14.5px;overflow-wrap:anywhere}
+.calc{width:100%;border-collapse:collapse;font-size:13px}
+.calc td{padding:5px 4px;border-top:1px solid var(--line);vertical-align:top}
+.calc td:first-child{color:var(--muted);white-space:nowrap;padding-right:10px}
+.calc td:last-child{font-family:var(--mono);font-size:12.5px;overflow-wrap:anywhere}
 
 /* ---------- Lange Namen ----------
    Namen dürfen bis zu 30 Zeichen haben. Nichts darf dadurch breiter als der Bildschirm werden:
@@ -936,22 +943,63 @@ body[data-mode="1v1"] .only2v2{display:none!important}
       </section>
 
       <section data-panel="formel" role="tabpanel" hidden>
-        <p class="help-lead">TrueSkill-Variante: Jeder hat ein geschätztes Können µ und eine Unsicherheit σ. Die Wertung wird nie gespeichert, sondern bei jedem Laden aus allen Spielen neu berechnet.</p>
-        <div class="fx">
-          <div><span>Anzeige</span><code>R = 1500 + 40 · (µ − 25)</code><small>Start: µ = 25, σ = 25/3 (± 333 Punkte)</small></div>
-          <div><span>Team</span><code>µ<sub>T</sub> = Ø µ<sub>i</sub>,  σ<sub>T</sub>² = Σ σ<sub>i</sub>² / n²</code></div>
-          <div><span>Streuung</span><code>c² = 2β² + σ<sub>A</sub>² + σ<sub>B</sub>²</code><small>β = 5,5 (≈ 220 Punkte): Zufallsanteil eines Spiels</small></div>
-          <div><span>Siegchance</span><code>P(A) = Φ((µ<sub>A</sub> − µ<sub>B</sub>) / c)</code></div>
-          <div><span>Torabstand</span><code>m = 0,5 + 0,5 · |Δ Tore| / Siegtore</code><small>5:0 → 1, 5:3 → 0,7, 7:6 → 0,57</small></div>
-          <div><span>Update</span><code>t = (µ<sub>W</sub> − µ<sub>L</sub>) / c</code>
-            <code>v = φ(t) / Φ(t),  w = v · (v + t)</code>
-            <code>µ<sub>i</sub> ← µ<sub>i</sub> ± (1/n) · (σ<sub>i</sub>² / c) · v · m</code>
-            <code>σ<sub>i</sub>² ← σ<sub>i</sub>² · (1 − w · σ<sub>i</sub>² / (n² c²)),  σ ≥ 0,8</code><small>+ für Sieger, − für Verlierer, n = Spieler im Team</small></div>
-          <div><span>Vor jedem Spiel</span><code>σ² ← σ² + τ²,  τ = 0,3</code><small>damit die Wertung nie einfriert</small></div>
-          <div><span>Durchmarsch</span><code>z = (Tore − q · Σ Tore) / √(Σ Tore · q · (1 − q))</code>
-            <code>S ← max(0, S + z − 0,5);  S &gt; 6 → σ ← max(σ, 7,5)</code><small>q = erwarteter Toranteil laut Siegchance, ab 10 Spielen</small></div>
-        </div>
-        <p class="help-note">Die Parameter sind per Simulation ganzer Ligen abgestimmt (Treffsicherheit, Aufholtempo, Ruhe der Tabelle).</p>
+        <p class="help-lead">Grundlage ist TrueSkill (Microsoft Research, 2006), leicht angepasst. Idee: Wie gut jemand in einem einzelnen Spiel spielt, schwankt zufällig um sein wahres Können. Die App schätzt dieses Können und weiß dabei auch, wie sicher sie sich ist.</p>
+
+        <p class="section-t">Formelzeichen</p>
+        <dl class="help-dl sym">
+          <dt><i>µ</i><sub>i</sub></dt><dd>geschätztes Können von Spieler <i>i</i>. Start: 25</dd>
+          <dt><i>σ</i><sub>i</sub></dt><dd>Unsicherheit dieser Schätzung (Standardabweichung). Start: 25/3 ≈ 8,33, nie unter 0,8</dd>
+          <dt><i>R</i></dt><dd>angezeigte Punkte</dd>
+          <dt><i>A</i>, <i>B</i></dt><dd>die beiden Teams; nach dem Spiel <i>W</i> = Sieger, <i>L</i> = Verlierer</dd>
+          <dt><i>n</i></dt><dd>Spieler pro Team (1 im Einzel, 2 im Doppel)</dd>
+          <dt><i>β</i> = 5,5</dt><dd>Zufall eines einzelnen Spiels (Tagesform, Glück), entspricht 220 Punkten</dd>
+          <dt><i>τ</i> = 0,3</dt><dd>wie schnell sich Können verändern darf</dd>
+          <dt>Φ, φ</dt><dd>Verteilungsfunktion und Dichte der Standardnormalverteilung</dd>
+        </dl>
+
+        <ol class="steps">
+          <li><b>Anzeige</b>
+            <div class="eq"><i>R</i> = 1500 + 40 · (<i>µ</i> − 25)</div>
+            <p>Eine Einheit <i>µ</i> sind 40 Punkte. Das ± im Profil ist 40 · <i>σ</i>.</p></li>
+          <li><b>Vor jedem Spiel</b> wird die Unsicherheit etwas größer:
+            <div class="eq"><i>σ</i><sub>i</sub>² ← <i>σ</i><sub>i</sub>² + <i>τ</i>²</div>
+            <p>Sonst würde die Wertung nach vielen Spielen einfrieren, und wer besser wird, käme nicht mehr hoch.</p></li>
+          <li><b>Team</b>: Können = Mittelwert, Unsicherheit = Unsicherheit des Mittelwerts
+            <div class="eq"><i>µ</i><sub>A</sub> = (1/<i>n</i>) · Σ <i>µ</i><sub>i</sub></div>
+            <div class="eq"><i>σ</i><sub>A</sub>² = (1/<i>n</i>²) · Σ <i>σ</i><sub>i</sub>²</div>
+            <p>Summiert wird über die Spieler des Teams. Für Team <i>B</i> genauso.</p></li>
+          <li><b>Gesamtstreuung</b> eines Spiels: Zufall beider Seiten plus Unsicherheit beider Schätzungen
+            <div class="eq"><i>c</i> = √(2<i>β</i>² + <i>σ</i><sub>A</sub>² + <i>σ</i><sub>B</sub>²)</div>
+            <p>Je größer <i>c</i>, desto weniger sagt ein Punkteunterschied über den Ausgang.</p></li>
+          <li><b>Siegchance</b> vor dem Spiel
+            <div class="eq">P(A gewinnt) = Φ( (<i>µ</i><sub>A</sub> − <i>µ</i><sub>B</sub>) / <i>c</i> )</div>
+            <p>Das sind die Prozentzahlen beim Eintragen und im Verlauf.</p></li>
+          <li><b>Torabstand</b>: Faktor zwischen 0,5 und 1
+            <div class="eq"><i>m</i> = 0,5 + 0,5 · |Tore<sub>W</sub> − Tore<sub>L</sub>| / Tore<sub>W</sub></div>
+            <p>5:0 → 1, 5:3 → 0,7, 7:6 → 0,57.</p></li>
+          <li><b>Nach dem Spiel</b>: drei Hilfsgrößen
+            <div class="eq"><i>t</i> = (<i>µ</i><sub>W</sub> − <i>µ</i><sub>L</sub>) / <i>c</i></div>
+            <p>Wie viel stärker der Sieger vorher eingeschätzt war, gemessen in <i>c</i>. Negativ, wenn der Außenseiter gewonnen hat.</p>
+            <div class="eq"><i>v</i> = φ(<i>t</i>) / Φ(<i>t</i>)</div>
+            <p>Die Überraschung: groß, wenn der Außenseiter gewinnt, fast 0, wenn der klare Favorit gewinnt.</p>
+            <div class="eq"><i>w</i> = <i>v</i> · (<i>v</i> + <i>t</i>)</div>
+            <p>Liegt zwischen 0 und 1: wie viel das Ergebnis über die wahre Stärke verrät, also wie stark die Unsicherheit danach sinkt.</p></li>
+          <li><b>Update</b> für jeden Spieler <i>i</i> (+ beim Sieger, − beim Verlierer)
+            <div class="eq"><i>µ</i><sub>i</sub> ← <i>µ</i><sub>i</sub> ± (1/<i>n</i>) · (<i>σ</i><sub>i</sub>² / <i>c</i>) · <i>v</i> · <i>m</i></div>
+            <div class="eq"><i>σ</i><sub>i</sub>² ← <i>σ</i><sub>i</sub>² · (1 − <i>w</i> · <i>σ</i><sub>i</sub>² / (<i>n</i>² <i>c</i>²))</div>
+            <p>Wer unsicherer ist (großes <i>σ</i>), bewegt sich stärker. Deshalb gewinnt und verliert ein Neuling mehr als ein eingespielter Gegner. Der Torabstand <i>m</i> wirkt nur auf <i>µ</i>. <i>σ</i> wird nach jedem Spiel kleiner, aber nie kleiner als 0,8.</p></li>
+          <li><b>Durchmarsch</b> (nach oben wie nach unten)
+            <div class="eq"><i>z</i> = (<i>x</i> − <i>q</i> · <i>N</i>) / √(<i>N</i> · <i>q</i> · (1 − <i>q</i>))</div>
+            <p><i>x</i> = eigene Tore, <i>N</i> = Tore im Spiel, <i>q</i> = erwarteter Anteil an den Toren. <i>q</i> wird aus der Siegchance zurückgerechnet: der Anteil pro Tor, mit dem man ein Spiel nach den Liga-Regeln genau so oft gewinnt. <i>z</i> ist die Abweichung von der Erwartung in Standardabweichungen.</p>
+            <div class="eq"><i>S</i> ← max(0, <i>S</i> + <i>z</i> − 0,5)</div>
+            <div class="eq">wenn <i>S</i> &gt; 6:   <i>σ</i> ← max(<i>σ</i>, 7,5)   und   <i>S</i> ← 0</div>
+            <p>Eine Summe, die kleine Ausreißer verpuffen lässt (CUSUM-Verfahren aus der Qualitätskontrolle). Nur wer über viele Spiele deutlich über der Erwartung liegt, wird wieder unsicher eingestuft und holt schnell auf. Nach unten genauso mit −<i>z</i>. Erst ab 10 Spielen.</p></li>
+        </ol>
+
+        <p class="section-t">Rechenweg an einem Beispiel</p>
+        <div id="helpCalc"></div>
+
+        <p class="help-note">Monat und Saison nutzen dieselben Formeln, nur mit Start bei <i>µ</i> = 25 und den Spielen des Zeitraums. Gespeichert wird nichts: Bei jedem Laden werden alle Spiele der Reihe nach durchgerechnet. Die Parameter <i>β</i>, <i>τ</i> und die Durchmarsch-Grenzen sind per Simulation ganzer Ligen abgestimmt.</p>
       </section>
     </div>
   </div>
@@ -1087,7 +1135,7 @@ const CFG = {
   histPage: 40,
   fameMinGames: 4,   // Mindestspiele im Monat/in der Saison für einen Titel
   tables: 1,         // Kickertische: so viele Spiele werden bei DYP pro Runde gleichzeitig ausgelost
-  appVersion: '2.6.2'
+  appVersion: '2.6.3'
 };
 
 /* ---------------- Helfer ---------------- */
@@ -3682,6 +3730,7 @@ function tableUrl() { return location.href.split('#')[0] + '#spiel'; }
 function openHelp(tab = 'grund') {
   closeDialog('dlgSettings');
   $('#helpExamples').innerHTML = helpExamples();
+  $('#helpCalc').innerHTML = helpCalc();
   helpTab(tab);
   openDialog('dlgHelp');
 }
@@ -3689,6 +3738,33 @@ function helpTab(tab) {
   $$('#dlgHelp [data-action="helpTab"]').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.tab === tab)); b.setAttribute('aria-selected', String(b.dataset.tab === tab)); });
   $$('#dlgHelp [data-panel]').forEach(p => { p.hidden = p.dataset.panel !== tab; });
   $('#helpBody').scrollTop = 0;
+}
+/* Rechenweg Schritt für Schritt: 1300 (±150) schlägt 1500 (±150) mit 5:3, gerechnet mit denselben Funktionen wie die Liga */
+function helpCalc() {
+  const T = S.league.target, beta = betaFor(T), f = (x, d = 2) => x.toFixed(d).replace('.', ',').replace('-', '−');
+  const W = { mu: MU0 + (1300 - RATING0) / 40, sigma: 150 / 40 }, L = { mu: MU0, sigma: 150 / 40 };
+  const s0 = W.sigma;
+  [W, L].forEach(r => { r.sigma = Math.min(Math.sqrt(r.sigma * r.sigma + TAU * TAU), SIGMA0); });
+  const c = teamC([W], [L], beta), t = (W.mu - L.mu) / c, P = cdf(t);
+  const v = pdf(t) / cdf(t), w = Math.min(Math.max(v * (v + t), 0), 0.999), m = 0.5 + 0.5 * 2 / 5;
+  const muW = W.mu, muL = L.mu, sW = W.sigma;
+  const a = { ...W }, b = { ...L };
+  tsUpdate([a], [b], m, beta);
+  const rows = [
+    ['Ausgangslage', `µ<sub>W</sub> = ${f(muW)}, µ<sub>L</sub> = ${f(muL)}, σ = ${f(s0)}`],
+    ['σ vor dem Spiel', `√(${f(s0)}² + 0,3²) = ${f(sW, 3)}`],
+    ['c', `√(2 · ${f(beta, 1)}² + 2 · ${f(sW, 3)}²) = ${f(c, 3)}`],
+    ['Siegchance Sieger', `Φ(${f(t, 3)}) = ${pctP(P)}`],
+    ['m (5:3)', `0,5 + 0,5 · 2/5 = ${f(m, 2)}`],
+    ['t', `(${f(muW)} − ${f(muL)}) / ${f(c, 3)} = ${f(t, 3)}`],
+    ['v', `φ(t) / Φ(t) = ${f(v, 3)}`],
+    ['w', `v · (v + t) = ${f(w, 3)}`],
+    ['Δµ Sieger', `${f(sW, 3)}² / ${f(c, 3)} · ${f(v, 3)} · ${f(m, 2)} = +${f(a.mu - muW, 3)}`],
+    ['Punkte', `40 · Δµ → <b>+${Math.round(40 * (a.mu - muW))}</b> für den Sieger, <b>−${Math.round(40 * (muL - b.mu))}</b> für den Verlierer`],
+    ['σ danach', `${f(sW, 3)} → ${f(a.sigma, 3)} (± ${Math.round(40 * sW)} → ± ${Math.round(40 * a.sigma)})`]
+  ];
+  return `<p class="help-note" style="margin:0 0 6px">Einzel: 1300 (± 150) schlägt 1500 (± 150) mit 5:3.</p>
+    <table class="calc"><tbody>${rows.map(([k, x]) => `<tr><td>${k}</td><td>${x}</td></tr>`).join('')}</tbody></table>`;
 }
 /* Rechenbeispiele, live mit derselben Rechnung wie die Liga (ändern sich also mit den Parametern mit) */
 function helpExamples() {
