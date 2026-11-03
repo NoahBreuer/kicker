@@ -526,15 +526,25 @@ dialog[open]{animation:pop .18s ease-out}
 .err-text{color:var(--red);font-size:13px;min-height:18px}
 
 /* ---------- Erklärseite ---------- */
-.help{font-size:14px;line-height:1.55}
-.help section{scroll-margin-top:8px}
-.help h4{margin:4px 0 6px;font-family:var(--display);font-size:15px;color:var(--cyan)}
-.help p{margin:0 0 8px;color:var(--text)}
-.help ul{margin:0 0 8px;padding-left:18px;display:grid;gap:5px}
-.help b{color:var(--text);font-weight:700}
-.help-nav{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
-.help-nav button{background:none;font-size:12.5px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);text-decoration:none}
-.help-nav button:hover{color:var(--cyan);border-color:rgba(63,208,224,.5)}
+.help{font-size:14px;line-height:1.5}
+.help-tabs{display:flex;flex-wrap:wrap}
+.help-tabs button{flex:1 1 auto;padding-left:8px;padding-right:8px}
+.help-lead{margin:0 0 10px}
+.help-dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px 12px;margin:0}
+.help-dl dt{font-weight:700;color:var(--cyan);font-size:13px;padding-top:1px}
+.help-dl dd{margin:0;color:var(--text)}
+@media (max-width:420px){.help-dl{grid-template-columns:minmax(0,1fr);gap:2px}.help-dl dd{margin-bottom:8px}}
+.help-note{margin:10px 0 0;color:var(--muted);font-size:13px}
+.help-ex{width:100%;border-collapse:collapse;font-size:13px}
+.help-ex td{padding:6px 4px;border-top:1px solid var(--line);vertical-align:top}
+.help-ex td:nth-child(2){text-align:right;white-space:nowrap;color:var(--muted)}
+.help-ex td:nth-child(3){text-align:right;font-family:var(--mono)}
+.help-ex .up{color:var(--green)} .help-ex .down{color:var(--red)}
+.fx{display:grid;gap:8px}
+.fx>div{display:grid;gap:3px;padding:9px 11px;border-radius:var(--r-md);background:var(--panel-0);border:1px solid var(--line)}
+.fx span{font-size:12px;font-weight:700;color:var(--cyan)}
+.fx code{font-family:var(--mono);font-size:13px;color:var(--text);overflow-wrap:anywhere}
+.fx small{font-size:12px;color:var(--muted)}
 
 /* ---------- Lange Namen ----------
    Namen dürfen bis zu 30 Zeichen haben. Nichts darf dadurch breiter als der Bildschirm werden:
@@ -768,7 +778,7 @@ body[data-mode="1v1"] .only2v2{display:none!important}
       <div class="card-head">
         <div>
           <h2>Rangliste</h2>
-          <p class="sub"><span id="lbSub"></span> <button class="linkbtn" data-action="help" data-sec="zeitraum">Wie wird gewertet?</button></p>
+          <p class="sub"><span id="lbSub"></span> <button class="linkbtn" data-action="help" data-sec="zeit">Wie wird gewertet?</button></p>
         </div>
         <button class="btn sm" data-action="addPlayer"><svg class="i"><use href="#i-userplus"/></svg>Spieler</button>
       </div>
@@ -886,53 +896,62 @@ body[data-mode="1v1"] .only2v2{display:none!important}
   <div class="dlg">
     <div class="dlg-head"><h3>So funktioniert die Wertung</h3><button class="x-btn" data-close aria-label="Schließen"><svg class="i"><use href="#i-x"/></svg></button></div>
     <div class="dlg-body help" id="helpBody">
-      <nav class="help-nav" aria-label="Abschnitte">
-        <button type="button" data-action="help" data-sec="kurz">Kurz gesagt</button><button type="button" data-action="help" data-sec="doppel">Doppel</button><button type="button" data-action="help" data-sec="neu">Neu dabei</button><button type="button" data-action="help" data-sec="zeitraum">Monat, Saison, Gesamt</button><button type="button" data-action="help" data-sec="dyp">DYP</button><button type="button" data-action="help" data-sec="mehr">Sonst noch</button>
-      </nav>
-      <section id="help-kurz">
-        <h4>Kurz gesagt</h4>
-        <p>Alle starten bei <b>1500 Punkten</b>. Nach jedem Spiel bekommen die Sieger Punkte, die Verlierer geben welche ab. Wie viele, hängt davon ab, wie überraschend das Ergebnis war:</p>
-        <ul>
-          <li>Sieg gegen Stärkere: viele Punkte. Sieg gegen Schwächere: wenige.</li>
-          <li>Ein deutlicher Sieg (5:0) zählt mehr als ein knapper (7:6).</li>
-        </ul>
-        <p>Aus den Punkten kommen auch die Siegchancen vor jedem Spiel. Faustregel: Bei <b>200 Punkten Unterschied</b> gewinnt der Stärkere knapp 3 von 4 Spielen.</p>
+      <div class="seg help-tabs" role="tablist" aria-label="Themen">
+        <button role="tab" data-action="helpTab" data-tab="grund">Grundidee</button>
+        <button role="tab" data-action="helpTab" data-tab="zeit">Zeiträume</button>
+        <button role="tab" data-action="helpTab" data-tab="dyp">DYP</button>
+        <button role="tab" data-action="helpTab" data-tab="formel">Formeln</button>
+      </div>
+
+      <section data-panel="grund" role="tabpanel">
+        <p class="help-lead">Alle starten bei <b>1500</b>. Ein Sieg bringt Punkte, eine Niederlage kostet welche. Je überraschender das Ergebnis, desto mehr.</p>
+        <dl class="help-dl">
+          <dt>Gegner</dt><dd>Sieg gegen Stärkere bringt viel, gegen Schwächere wenig.</dd>
+          <dt>Ergebnis</dt><dd>Ein 5:0 zählt fast doppelt so viel wie ein 7:6.</dd>
+          <dt>Doppel</dt><dd>Teamstärke = Durchschnitt beider. Die Position ändert die Punkte nicht.</dd>
+          <dt>Neu dabei</dt><dd>Anfangs ist die Wertung unsicher (± im Profil) und springt stark. Platz ab 5 Spielen.</dd>
+          <dt>Durchmarsch</dt><dd>Wer lange klar über seiner Wertung spielt, wird wieder als unsicher eingestuft und holt schnell auf.</dd>
+        </dl>
+        <p class="section-t" style="margin:14px 0 6px">Beispiele</p>
+        <div id="helpExamples"></div>
+        <p class="help-note">Faustregel: 200 Punkte Unterschied heißt, der Stärkere gewinnt knapp 3 von 4 Spielen.</p>
       </section>
-      <section id="help-doppel">
-        <h4>Doppel</h4>
-        <p>Gerechnet wird mit der Stärke des Teams, also dem Durchschnitt beider. Beide im Siegerteam gewinnen Punkte, aber nicht unbedingt gleich viele: Wer noch wenige Spiele hat, bewegt sich stärker als ein eingespielter Partner.</p>
-        <p>Ob man im Sturm oder in der Abwehr steht, ändert die Punkte nicht. Die Position fließt nur in die Statistik ein.</p>
+
+      <section data-panel="zeit" role="tabpanel" hidden>
+        <dl class="help-dl">
+          <dt>Gesamt</dt><dd>Alle Spiele seit Beginn. Das ist die eigentliche Wertung: Danach richten sich Siegchancen, Auslosung und Schachtitel. Wer 90 Tage nicht spielt, wird ausgeblendet.</dd>
+          <dt>Monat, Saison</dt><dd>Eigene Tabellen (Saison = Quartal): Alle starten bei 1500, gleiche Rechnung, aber nur mit den Spielen dieses Zeitraums. Platz ab 4 Spielen, vorne am Monatsende = Spieler des Monats.</dd>
+          <dt>Folge</dt><dd>Die Monatspunkte schwanken anfangs stark, und im Monat kann jemand vor jemandem stehen, der insgesamt mehr Punkte hat.</dd>
+          <dt>Schachtitel</dt><dd>Nur Gesamt, nach der Einstufung: GM ab 1750, IM ab 1675, FM ab 1600, CM ab 1550.</dd>
+        </dl>
       </section>
-      <section id="help-neu">
-        <h4>Neu dabei: Einstufung und ±</h4>
-        <p>Am Anfang weiß die App wenig über dich. Deshalb springt die Wertung in den ersten Spielen stark und wird mit jedem Spiel ruhiger. Das <b>±</b> im Profil zeigt, wie unsicher sie noch ist.</p>
-        <p>Einen Platz in der Gesamtrangliste gibt es ab <b>5 Spielen</b>. Wer 90 Tage nicht spielt, wird ausgeblendet, die Punkte bleiben.</p>
-        <p><b>Durchmarsch:</b> Spielt jemand über viele Spiele deutlich besser, als seine Punkte erwarten lassen, gilt seine Wertung wieder als unsicher. So holt er schnell auf, statt lange hinterherzulaufen.</p>
+
+      <section data-panel="dyp" role="tabpanel" hidden>
+        <dl class="help-dl">
+          <dt>Auslosung</dt><dd>Ein Spiel pro Runde. Pause hat, wer in dieser Spielpause schon am meisten gespielt hat. Neue sind sofort dran. Nach über einer Stunde Pause zählt es neu.</dd>
+          <dt>Tabelle</dt><dd><span class="mono">Wert = (Siege + 1,5) / (Spiele + 3)</span>, eine geglättete Siegquote (Bayes'scher Durchschnitt). 1 von 1 → 63, 9 von 10 → 81. Gleichstand: Tordifferenz pro Spiel.</dd>
+          <dt>Neu auslosen</dt><dd>Geht jederzeit, steht aber für alle sichtbar im Turnier und im Verlauf.</dd>
+          <dt>Liga</dt><dd>Turnierspiele zählen ganz normal für alle Ranglisten.</dd>
+        </dl>
       </section>
-      <section id="help-zeitraum">
-        <h4>Monat, Saison, Gesamt</h4>
-        <ul>
-          <li><b>Gesamt</b> zählt alle Spiele seit Beginn. Das ist die eigentliche Wertung: Nach ihr richten sich die Siegchancen, das Auslosen und die Schachtitel.</li>
-          <li><b>Monat</b> und <b>Saison</b> (Quartal) sind eigene Tabellen. Alle starten wieder bei 1500, gezählt werden nur Spiele aus diesem Zeitraum. So hat jeder jeden Monat eine neue Chance, auch wer insgesamt weiter hinten steht.</li>
-          <li>Weil am Anfang des Monats wieder alle neu eingestuft werden, schwanken die Monatspunkte in den ersten Spielen stark. Einen Platz gibt es ab <b>4 Spielen</b>. Wer am Monatsende vorne liegt, wird Spieler des Monats.</li>
-        </ul>
-        <p>Deshalb kann jemand im Monat vor jemandem stehen, der insgesamt deutlich mehr Punkte hat.</p>
-      </section>
-      <section id="help-dyp">
-        <h4>DYP-Turniere</h4>
-        <ul>
-          <li><b>Wer pausiert:</b> wer in der laufenden Spielpause schon am meisten gespielt hat. Wer neu dazukommt, ist sofort dran.</li>
-          <li><b>Turnier-Tabelle:</b> Wert = (Siege + 1,5) / (Spiele + 3), also eine geglättete Siegquote (Bayes'scher Durchschnitt). Beispiele: 1 von 1 → 63, 9 von 10 → 81. Bei Gleichstand zählt die Tordifferenz pro Spiel.</li>
-          <li>Turnierspiele zählen ganz normal für alle Ranglisten.</li>
-        </ul>
-      </section>
-      <section id="help-mehr">
-        <h4>Sonst noch</h4>
-        <ul>
-          <li><b>Schachtitel</b> (nur Gesamt, nach der Einstufung): GM ab 1750, IM ab 1675, FM ab 1600, CM ab 1550 Punkten.</li>
-          <li>Die Punkte werden nie gespeichert, sondern jedes Mal aus allen Spielen neu berechnet. Wird ein Spiel annulliert, ist es, als hätte es nie stattgefunden.</li>
-          <li>Technisch ist es eine Variante von TrueSkill, dem System hinter den Ranglisten vieler Online-Spiele. Ähnlich wie Elo, nur mit eingebauter Unsicherheit.</li>
-        </ul>
+
+      <section data-panel="formel" role="tabpanel" hidden>
+        <p class="help-lead">TrueSkill-Variante: Jeder hat ein geschätztes Können µ und eine Unsicherheit σ. Die Wertung wird nie gespeichert, sondern bei jedem Laden aus allen Spielen neu berechnet.</p>
+        <div class="fx">
+          <div><span>Anzeige</span><code>R = 1500 + 40 · (µ − 25)</code><small>Start: µ = 25, σ = 25/3 (± 333 Punkte)</small></div>
+          <div><span>Team</span><code>µ<sub>T</sub> = Ø µ<sub>i</sub>,  σ<sub>T</sub>² = Σ σ<sub>i</sub>² / n²</code></div>
+          <div><span>Streuung</span><code>c² = 2β² + σ<sub>A</sub>² + σ<sub>B</sub>²</code><small>β = 5,5 (≈ 220 Punkte): Zufallsanteil eines Spiels</small></div>
+          <div><span>Siegchance</span><code>P(A) = Φ((µ<sub>A</sub> − µ<sub>B</sub>) / c)</code></div>
+          <div><span>Torabstand</span><code>m = 0,5 + 0,5 · |Δ Tore| / Siegtore</code><small>5:0 → 1, 5:3 → 0,7, 7:6 → 0,57</small></div>
+          <div><span>Update</span><code>t = (µ<sub>W</sub> − µ<sub>L</sub>) / c</code>
+            <code>v = φ(t) / Φ(t),  w = v · (v + t)</code>
+            <code>µ<sub>i</sub> ← µ<sub>i</sub> ± (1/n) · (σ<sub>i</sub>² / c) · v · m</code>
+            <code>σ<sub>i</sub>² ← σ<sub>i</sub>² · (1 − w · σ<sub>i</sub>² / (n² c²)),  σ ≥ 0,8</code><small>+ für Sieger, − für Verlierer, n = Spieler im Team</small></div>
+          <div><span>Vor jedem Spiel</span><code>σ² ← σ² + τ²,  τ = 0,3</code><small>damit die Wertung nie einfriert</small></div>
+          <div><span>Durchmarsch</span><code>z = (Tore − q · Σ Tore) / √(Σ Tore · q · (1 − q))</code>
+            <code>S ← max(0, S + z − 0,5);  S &gt; 6 → σ ← max(σ, 7,5)</code><small>q = erwarteter Toranteil laut Siegchance, ab 10 Spielen</small></div>
+        </div>
+        <p class="help-note">Die Parameter sind per Simulation ganzer Ligen abgestimmt (Treffsicherheit, Aufholtempo, Ruhe der Tabelle).</p>
       </section>
     </div>
   </div>
@@ -1068,7 +1087,7 @@ const CFG = {
   histPage: 40,
   fameMinGames: 4,   // Mindestspiele im Monat/in der Saison für einen Titel
   tables: 1,         // Kickertische: so viele Spiele werden bei DYP pro Runde gleichzeitig ausgelost
-  appVersion: '2.6.1'
+  appVersion: '2.6.2'
 };
 
 /* ---------------- Helfer ---------------- */
@@ -3373,7 +3392,7 @@ function renderProfile(pid) {
     <div class="row wrap-ok" style="gap:6px;margin-top:4px;font-size:13px">
       ${(() => { const ct = chessTitle(rating, r.games >= CFG.placement && !p.archived); return ct ? `<span class="tier t3" ${tipAttr(`${ct.name}: ab ${ct.min} Punkten. Darüber: ${CHESS.filter(x => x.min > ct.min).map(x => `${x.abbr} ab ${x.min}`).join(', ') || 'nichts, höchster Titel'}.`)}>${ct.abbr} ${ct.name}</span>` : ''; })()}
       ${p.archived ? '<span class="tag void">archiviert</span>' : r.games < CFG.placement ? `<span class="mono muted">In Einstufung, ${r.games} von ${CFG.placement} Spielen</span>` : `<span class="mono muted">Rang ${rank} von ${list.length}</span>`}
-      <span class="mono" style="color:var(--cyan)">${rating} Punkte</span><span class="dim mono" ${tipAttr('Unsicherheit der Schätzung: So weit kann die wahre Stärke noch nach oben oder unten abweichen.')}>±${Math.round(40 * r.sigma)}</span><button class="linkbtn small" data-action="help" data-sec="kurz">Wie wird gewertet?</button>
+      <span class="mono" style="color:var(--cyan)">${rating} Punkte</span><span class="dim mono" ${tipAttr('Unsicherheit der Schätzung: So weit kann die wahre Stärke noch nach oben oder unten abweichen.')}>±${Math.round(40 * r.sigma)}</span><button class="linkbtn small" data-action="help" data-sec="grund">Wie wird gewertet?</button>
     </div></div>`;
 
   const rate = r.games ? r.wins / r.games : 0;
@@ -3631,7 +3650,7 @@ function renderSettings() {
         <div class="seg" role="group" aria-label="Höchstens">${[0, 7, 8].map(v => `<button data-action="league" data-k="cap" data-v="${v}" aria-pressed="${S.league.cap === v}">${v ? 'max. ' + v : 'offen'}</button>`).join('')}</div>
       </div><p class="sub" style="margin:6px 0 0">Gilt sofort für alle Geräte.</p>` : ''}
     </div>
-    <div class="row wrap-ok" style="gap:8px"><button class="btn sm" data-action="help" data-sec="kurz">${icon('info')}So funktioniert die Wertung</button><button class="btn sm" data-action="openQr">${icon('qr')}QR-Code für den Tisch drucken</button></div>
+    <div class="row wrap-ok" style="gap:8px"><button class="btn sm" data-action="help" data-sec="grund">${icon('info')}So funktioniert die Wertung</button><button class="btn sm" data-action="openQr">${icon('qr')}QR-Code für den Tisch drucken</button></div>
     <label class="switch"><span>Signalton nach jedem Spiel<br><span class="muted small">Nur auf diesem Gerät</span></span><input type="checkbox" id="swSound" ${S.sound ? 'checked' : ''}></label>
     ${S.isAdmin && d ? (() => {
       const v = d.valid, goals = v.reduce((s, m) => s + m.sb + m.sg, 0);
@@ -3660,11 +3679,40 @@ function renderSettings() {
 /* ---------------- QR ---------------- */
 function tableUrl() { return location.href.split('#')[0] + '#spiel'; }
 // Erklärseite zur Wertung, optional direkt an einem Abschnitt
-function openHelp(sec) {
+function openHelp(tab = 'grund') {
   closeDialog('dlgSettings');
+  $('#helpExamples').innerHTML = helpExamples();
+  helpTab(tab);
   openDialog('dlgHelp');
-  const body = $('#helpBody'), target = sec && $(`#help-${sec}`);
-  body.scrollTop = target && sec !== 'kurz' ? target.offsetTop - body.offsetTop - 6 : 0;
+}
+function helpTab(tab) {
+  $$('#dlgHelp [data-action="helpTab"]').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.tab === tab)); b.setAttribute('aria-selected', String(b.dataset.tab === tab)); });
+  $$('#dlgHelp [data-panel]').forEach(p => { p.hidden = p.dataset.panel !== tab; });
+  $('#helpBody').scrollTop = 0;
+}
+/* Rechenbeispiele, live mit derselben Rechnung wie die Liga (ändern sich also mit den Parametern mit) */
+function helpExamples() {
+  const T = S.league.target, beta = betaFor(T);
+  const P = (rating, pm) => ({ mu: MU0 + (rating - RATING0) / 40, sigma: pm / 40 });
+  const play = (A, B, sa, sb) => {
+    const a = A.map(x => ({ ...x })), b = B.map(x => ({ ...x }));
+    [...a, ...b].forEach(r => { r.sigma = Math.min(Math.sqrt(r.sigma * r.sigma + TAU * TAU), SIGMA0); });
+    const p = winProb(a, b, T), a0 = a.map(r => r.mu), b0 = b.map(r => r.mu);
+    const mf = 0.5 + 0.5 * Math.abs(sa - sb) / Math.max(sa, sb, 1);
+    tsUpdate(a, b, mf, beta); // a hat gewonnen
+    return { p, da: a.map((r, i) => Math.round(40 * (r.mu - a0[i]))), db: b.map((r, i) => Math.round(40 * (r.mu - b0[i]))) };
+  };
+  const E = 150, sg = v => `<span class="${v >= 0 ? 'up' : 'down'}">${v >= 0 ? '+' : '−'}${Math.abs(v)}</span>`;
+  const rows = [
+    ['1500 schlägt 1500, 5:0', play([P(1500, E)], [P(1500, E)], 5, 0), r => `${sg(r.da[0])} / ${sg(r.db[0])}`],
+    ['1500 schlägt 1500, 7:6', play([P(1500, E)], [P(1500, E)], 7, 6), r => `${sg(r.da[0])} / ${sg(r.db[0])}`],
+    ['1300 schlägt 1500, 5:3', play([P(1300, E)], [P(1500, E)], 5, 3), r => `${sg(r.da[0])} / ${sg(r.db[0])}`],
+    ['1500 schlägt 1300, 5:3', play([P(1500, E)], [P(1300, E)], 5, 3), r => `${sg(r.da[0])} / ${sg(r.db[0])}`],
+    ['Neuling (±333) schlägt 1500, 5:3', play([P(1500, 333)], [P(1500, E)], 5, 3), r => `${sg(r.da[0])} / ${sg(r.db[0])}`],
+    ['Doppel: Neuling & 1500 schlagen 1500 & 1500, 5:3', play([P(1500, 333), P(1500, E)], [P(1500, E), P(1500, E)], 5, 3), r => `${sg(r.da[0])}, ${sg(r.da[1])} / je ${sg(r.db[0])}`]
+  ];
+  return `<table class="help-ex"><tbody>${rows.map(([label, r, f]) => `<tr><td>${esc(label)}</td><td>${pctP(r.p)}</td><td>${f(r)}</td></tr>`).join('')}</tbody></table>
+    <p class="help-note" style="margin-top:6px">Mitte: Siegchance des Siegers vorher. Rechts: Punkte für Sieger / Verlierer. Eingespielte Spieler mit ± ${E}.</p>`;
 }
 function openQr() {
   const url = tableUrl();
@@ -3770,6 +3818,7 @@ const ACTIONS = {
   openSettings: () => { renderSettings(); openDialog('dlgSettings'); },
   openQr: () => { closeDialog('dlgSettings'); openQr(); },
   help: el => openHelp(el.dataset.sec),
+  helpTab: el => helpTab(el.dataset.tab),
   printQr: () => printQr(),
   exportJson: () => exportJson(),
   restoreBackup: () => pickBackupFile(),
